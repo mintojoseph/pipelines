@@ -252,6 +252,7 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib-common</artifactId>
+      <version>${okio-kotlin.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

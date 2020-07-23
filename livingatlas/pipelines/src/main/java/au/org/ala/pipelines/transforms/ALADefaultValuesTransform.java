@@ -1,9 +1,18 @@
 package au.org.ala.pipelines.transforms;
 
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import lombok.Builder;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.Setup;
+import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.PCollection;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
@@ -12,18 +21,6 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
-
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.Setup;
-import org.apache.beam.sdk.transforms.PTransform;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.PCollection;
-
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import com.google.common.base.Strings;
-import lombok.Builder;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Most of this class if copied from GBIF' {@link DefaultValuesTransform}. The only difference is

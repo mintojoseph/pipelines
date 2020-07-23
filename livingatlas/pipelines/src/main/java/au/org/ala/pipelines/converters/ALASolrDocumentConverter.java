@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.converters;
 
+import static org.apache.avro.Schema.Type.UNION;
+
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -8,7 +10,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Field;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.solr.common.SolrInputDocument;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
@@ -20,18 +28,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.solr.common.SolrInputDocument;
 import org.jetbrains.annotations.NotNull;
-
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.apache.avro.Schema.Type.UNION;
 
 /** Create a SOLR document using the supplied records. */
 @Slf4j
@@ -115,7 +112,7 @@ public class ALASolrDocumentConverter {
 
   private void fillALAAttributionRecord(SolrInputDocument doc) {
     // Add legacy collectory fields
-    if (alaAttributionRecord == null) {
+    if (alaAttributionRecord != null) {
       addIfNotEmpty(doc, "license", alaAttributionRecord.getLicenseType());
       // for backwards compatibility
       addIfNotEmpty(doc, "raw_dataResourceUid", alaAttributionRecord.getDataResourceUid());

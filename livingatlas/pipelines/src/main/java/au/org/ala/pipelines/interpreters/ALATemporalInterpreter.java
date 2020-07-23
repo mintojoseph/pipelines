@@ -1,8 +1,13 @@
 package au.org.ala.pipelines.interpreters;
 
+import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
+
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
-
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -11,14 +16,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
-import org.apache.commons.lang3.StringUtils;
-
-import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
-
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 public class ALATemporalInterpreter {
 

@@ -1,7 +1,19 @@
 package au.org.ala.pipelines.transforms;
 
-import java.util.Optional;
+import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
+import au.org.ala.kvs.client.ALACollectionLookup;
+import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
+import java.util.Optional;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
@@ -12,21 +24,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
-
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import au.org.ala.kvs.client.ALACollectionLookup;
-import au.org.ala.kvs.client.ALACollectionMatch;
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-
-import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
 /**
  * ALA attribution transform for adding ALA attribution retrieved from the collectory to interpreted

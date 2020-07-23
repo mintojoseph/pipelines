@@ -8,19 +8,17 @@
  */
 package au.org.ala.pipelines.transforms;
 
-import java.util.Optional;
+import static au.org.ala.pipelines.common.ALARecordTypes.ALA_UUID;
 
+import java.util.Optional;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.Transform;
-
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import static au.org.ala.pipelines.common.ALARecordTypes.ALA_UUID;
 
 public class ALAUUIDTransform extends Transform<ExtendedRecord, ALAUUIDRecord> {
 

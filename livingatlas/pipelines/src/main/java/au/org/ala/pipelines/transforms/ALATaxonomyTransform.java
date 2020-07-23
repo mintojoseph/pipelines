@@ -1,7 +1,17 @@
 package au.org.ala.pipelines.transforms;
 
-import java.util.Optional;
+import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.names.ws.api.NameSearch;
+import au.org.ala.names.ws.api.NameUsageMatch;
+import au.org.ala.pipelines.interpreters.ALATaxonomyInterpreter;
+import java.util.Optional;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
@@ -11,19 +21,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
-
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.names.ws.api.NameSearch;
-import au.org.ala.names.ws.api.NameUsageMatch;
-import au.org.ala.pipelines.interpreters.ALATaxonomyInterpreter;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-
-import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
 /**
  * ALA taxonomy transform for adding ALA taxonomy to interpreted occurrence data.

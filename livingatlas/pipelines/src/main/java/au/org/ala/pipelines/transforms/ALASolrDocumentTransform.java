@@ -1,23 +1,12 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+
+import au.org.ala.pipelines.converters.ALASolrDocumentConverter;
 import java.io.Serializable;
-import java.util.Optional;
-
-import org.gbif.pipelines.io.avro.ALAAttributionRecord;
-import org.gbif.pipelines.io.avro.ALATaxonRecord;
-import org.gbif.pipelines.io.avro.ALAUUIDRecord;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -27,13 +16,16 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.solr.common.SolrInputDocument;
-
-import au.org.ala.pipelines.converters.ALASolrDocumentConverter;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
  * A SOLR transform that aims to provide a index that is backwards compatible with ALA's
@@ -61,7 +53,7 @@ public class ALASolrDocumentTransform implements Serializable {
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
-  String datasetID;
+  String datasetId;
 
   public ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> converter() {
 
@@ -82,22 +74,15 @@ public class ALASolrDocumentTransform implements Serializable {
             BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
             TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
+            TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
 
             // ALA specific
             ALAUUIDRecord ur = v.getOnly(urTag);
             ALATaxonRecord atxr = v.getOnly(atxrTag, ALATaxonRecord.newBuilder().setId(k).build());
             ALAAttributionRecord aar =
                 v.getOnly(aarTag, ALAAttributionRecord.newBuilder().setId(k).build());
-
-            TaxonRecord txr =
-                Optional.ofNullable(txrTag)
-                    .map(x -> v.getOnly(x, TaxonRecord.newBuilder().setId(k).build()))
-                    .orElse(null);
-
             LocationFeatureRecord asr =
-                Optional.ofNullable(asrTag)
-                    .map(x -> v.getOnly(x, LocationFeatureRecord.newBuilder().setId(k).build()))
-                    .orElse(null);
+                v.getOnly(asrTag, LocationFeatureRecord.newBuilder().setId(k).build());
 
             SolrInputDocument doc =
                 ALASolrDocumentConverter.builder()

@@ -3,9 +3,9 @@ package au.org.ala.pipelines.java;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import au.org.ala.pipelines.common.ALARecordTypes;
+import au.org.ala.pipelines.converters.ALASolrDocumentConverter;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALASolrDocumentTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -23,14 +23,26 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -331,11 +343,6 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
     Map<String, LocationFeatureRecord> australiaSpatialMap = australiaSpatialMapFeature.get();
 
-    Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
-    Map<String, ImageRecord> imageMap = imageMapFeature.get();
-    Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
-    Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
-
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
     Function<BasicRecord, SolrInputDocument> indexRequestFn =
@@ -351,11 +358,6 @@ public class ALAInterpretedToSolrIndexPipeline {
               locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
           TaxonRecord txr = null;
 
-          //            if (options.getIncludeGbifTaxonomy()) {
-          //                txr = taxonMap.getOrDefault(k,
-          // TaxonRecord.newBuilder().setId(k).build());
-          //            }
-
           // ALA specific
           ALAUUIDRecord aur = aurMap.getOrDefault(k, ALAUUIDRecord.newBuilder().setId(k).build());
           ALATaxonRecord atxr =
@@ -366,22 +368,19 @@ public class ALAInterpretedToSolrIndexPipeline {
               australiaSpatialMap.getOrDefault(
                   k, LocationFeatureRecord.newBuilder().setId(k).build());
 
-          // Extension
-          MultimediaRecord mr =
-              multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
-          ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-          AudubonRecord ar =
-              audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-          MeasurementOrFactRecord mfr =
-              measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
-
-          MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-
-          SolrInputDocument doc =
-              ALASolrDocumentTransform.createSolrDocument(
-                  metadata, br, tr, lr, txr, atxr, er, aar, asr, aur);
-
-          return doc;
+          return ALASolrDocumentConverter.builder()
+              .metadataRecord(metadata)
+              .basicRecord(br)
+              .temporalRecord(tr)
+              .locationRecord(lr)
+              .taxonRecord(txr)
+              .alaTaxonRecord(atxr)
+              .extendedRecord(er)
+              .alaAttributionRecord(aar)
+              .locationFeatureRecord(asr)
+              .alauuidRecord(aur)
+              .build()
+              .createSolrDocument();
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

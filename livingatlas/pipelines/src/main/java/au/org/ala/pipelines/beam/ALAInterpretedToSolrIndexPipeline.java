@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.solr.SolrIO;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -25,17 +26,27 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
-import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.core.*;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
-import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.slf4j.MDC;
@@ -80,12 +91,6 @@ public class ALAInterpretedToSolrIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
 
-    // Extension
-    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
-
     // ALA specific
     ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
@@ -114,99 +119,67 @@ public class ALAInterpretedToSolrIndexPipeline {
         p.apply("Read Location", locationTransform.read(pathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
-    PCollection<KV<String, TaxonRecord>> taxonCollection = null;
-    if (options.getIncludeGbifTaxonomy()) {
-      taxonCollection =
-          p.apply("Read Taxon", taxonomyTransform.read(pathFn))
-              .apply("Map Taxon to KV", taxonomyTransform.toKv());
-    }
-
-    PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", multimediaTransform.read(pathFn))
-            .apply("Map Multimedia to KV", multimediaTransform.toKv());
-
-    PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", imageTransform.read(pathFn))
-            .apply("Map Image to KV", imageTransform.toKv());
-
-    PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", audubonTransform.read(pathFn))
-            .apply("Map Audubon to KV", audubonTransform.toKv());
-
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
-            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
+    PCollection<KV<String, TaxonRecord>> taxonCollection =
+        p.apply(
+                "Read Taxon",
+                options.getIncludeGbifTaxonomy()
+                    ? taxonomyTransform.read(pathFn)
+                    : Create.empty(TypeDescriptor.of(TaxonRecord.class)))
+            .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
     // ALA Specific
     PCollection<KV<String, ALAUUIDRecord>> alaUUidCollection =
-        p.apply("Read Taxon", alaUuidTransform.read(identifiersPathFn))
-            .apply("Map Taxon to KV", alaUuidTransform.toKv());
+        p.apply("Read UUID", alaUuidTransform.read(identifiersPathFn))
+            .apply("Map UUID to KV", alaUuidTransform.toKv());
 
     PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
-        p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+        p.apply("Read ALA Taxon", alaTaxonomyTransform.read(pathFn))
+            .apply("Map ALA Taxon to KV", alaTaxonomyTransform.toKv());
 
     PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
-    PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection = null;
-    if (options.getIncludeSampling()) {
-      locationFeatureCollection =
-          p.apply("Read Sampling", locationFeatureTransform.read(samplingPathFn))
-              .apply("Map Sampling to KV", locationFeatureTransform.toKv());
-    }
-
-    ALASolrDocumentTransform solrDocumentTransform =
-        ALASolrDocumentTransform.create(
-            verbatimTransform.getTag(),
-            basicTransform.getTag(),
-            temporalTransform.getTag(),
-            locationTransform.getTag(),
-            options.getIncludeGbifTaxonomy() ? taxonomyTransform.getTag() : null,
-            alaTaxonomyTransform.getTag(),
-            multimediaTransform.getTag(),
-            imageTransform.getTag(),
-            audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(),
-            options.getIncludeSampling() ? locationFeatureTransform.getTag() : null,
-            alaAttributionTransform.getTag(),
-            alaUuidTransform.getTag(),
-            metadataView,
-            options.getDatasetId());
+    PCollection<KV<String, LocationFeatureRecord>> locationFeatureCollection =
+        p.apply(
+                "Read Sampling",
+                options.getIncludeSampling()
+                    ? locationFeatureTransform.read(samplingPathFn)
+                    : Create.empty(TypeDescriptor.of(LocationFeatureRecord.class)))
+            .apply("Map Sampling to KV", locationFeatureTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, SolrInputDocument> alaSolrDoFn =
-        solrDocumentTransform.converter();
+        ALASolrDocumentTransform.builder()
+            .datasetId(options.getDatasetId())
+            .metadataView(metadataView)
+            .urTag(alaUuidTransform.getTag())
+            .erTag(verbatimTransform.getTag())
+            .brTag(basicTransform.getTag())
+            .trTag(temporalTransform.getTag())
+            .lrTag(locationTransform.getTag())
+            .txrTag(taxonomyTransform.getTag())
+            .asrTag(locationFeatureTransform.getTag())
+            .atxrTag(alaTaxonomyTransform.getTag())
+            .aarTag(alaAttributionTransform.getTag())
+            .build()
+            .converter();
 
-    KeyedPCollectionTuple<String> kpct =
+    PCollection<SolrInputDocument> solrInputDocumentPCollection =
         KeyedPCollectionTuple
             // Core
             .of(basicTransform.getTag(), basicCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
-            // Extension
-            .and(multimediaTransform.getTag(), multimediaCollection)
-            .and(imageTransform.getTag(), imageCollection)
-            .and(audubonTransform.getTag(), audubonCollection)
-            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
             // ALA Specific
             .and(alaUuidTransform.getTag(), alaUUidCollection)
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-            .and(alaAttributionTransform.getTag(), alaAttributionCollection);
-
-    if (options.getIncludeSampling()) {
-      kpct = kpct.and(locationFeatureTransform.getTag(), locationFeatureCollection);
-    }
-
-    if (options.getIncludeGbifTaxonomy()) {
-      kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
-    }
-
-    PCollection<SolrInputDocument> solrInputDocumentPCollection =
-        kpct.apply("Grouping objects", CoGroupByKey.create())
+            .and(alaAttributionTransform.getTag(), alaAttributionCollection)
+            .and(locationFeatureTransform.getTag(), locationFeatureCollection)
+            .and(taxonomyTransform.getTag(), taxonCollection)
+            .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to Solr doc", alaSolrDoFn);
 
     log.info("Adding step 4: SOLR indexing");

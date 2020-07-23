@@ -1,19 +1,17 @@
 package au.org.ala.pipelines.interpreters;
 
+import au.org.ala.kvs.client.ALACollectionLookup;
+import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.kvs.client.ALACollectoryMetadata;
 import java.util.function.BiConsumer;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-
-import au.org.ala.kvs.client.ALACollectionLookup;
-import au.org.ala.kvs.client.ALACollectionMatch;
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

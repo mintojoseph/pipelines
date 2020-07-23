@@ -1,11 +1,17 @@
 package au.org.ala.pipelines.spark;
 
+import static org.apache.spark.sql.functions.col;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -18,15 +24,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.google.common.base.Strings;
-import lombok.extern.slf4j.Slf4j;
 import scala.Tuple4;
-
-import static org.apache.spark.sql.functions.col;
 
 /**
  * A Spark only pipeline that generates AVRO files for UUIDs based on a CSV export from Cassandra.

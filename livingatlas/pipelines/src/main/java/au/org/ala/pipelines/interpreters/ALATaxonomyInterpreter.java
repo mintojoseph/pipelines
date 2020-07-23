@@ -1,9 +1,19 @@
 package au.org.ala.pipelines.interpreters;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.names.ws.api.NameSearch;
+import au.org.ala.names.ws.api.NameUsageMatch;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.BiConsumer;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
@@ -12,18 +22,6 @@ import org.gbif.pipelines.io.avro.ALAMatchType;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
-
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.names.ws.api.NameSearch;
-import au.org.ala.names.ws.api.NameUsageMatch;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
-import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -103,7 +101,6 @@ public class ALATaxonomyInterpreter {
         // happens when we get an empty response from the WS
         addIssue(atr, TAXON_MATCH_NONE);
       }
-
 
       if (usageMatch != null) {
         if (usageMatch.getIssues() != null) {
