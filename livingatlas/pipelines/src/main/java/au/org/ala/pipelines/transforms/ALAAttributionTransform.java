@@ -1,23 +1,32 @@
 package au.org.ala.pipelines.transforms;
 
-import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
-
-import au.org.ala.kvs.client.*;
-import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
+
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.io.avro.ALAAttributionRecord;
+import org.gbif.pipelines.io.avro.ALATaxonRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
+import org.gbif.pipelines.transforms.Transform;
+
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.SerializableConsumer;
-import org.gbif.pipelines.transforms.SerializableSupplier;
-import org.gbif.pipelines.transforms.Transform;
+
+import au.org.ala.kvs.client.ALACollectionLookup;
+import au.org.ala.kvs.client.ALACollectionMatch;
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+
+import static au.org.ala.pipelines.common.ALARecordTypes.ALA_ATTRIBUTION;
 
 /**
  * ALA attribution transform for adding ALA attribution retrieved from the collectory to interpreted
@@ -46,10 +55,8 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
 
   @Builder(buildMethodName = "create")
   private ALAAttributionTransform(
-      KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
       SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
           dataResourceKvStoreSupplier,
-      KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore,
       SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
           collectionKvStoreSupplier) {
     super(
@@ -57,19 +64,12 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
         ALA_ATTRIBUTION,
         ALAAttributionTransform.class.getName(),
         "alaAttributionRecordsCount");
-    this.dataResourceKvStore = dataResourceKvStore;
-    this.collectionKvStore = collectionKvStore;
     this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
     this.collectionKvStoreSupplier = collectionKvStoreSupplier;
   }
 
   public ALAAttributionTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
-    return this;
-  }
-
-  public ALAAttributionTransform init() {
-    setup();
     return this;
   }
 
@@ -90,10 +90,6 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
     }
   }
 
-  /** Beam @Teardown closes initialized resources */
-  @Teardown
-  public void tearDown() {}
-
   public ParDo.SingleOutput<ExtendedRecord, ALAAttributionRecord> interpret(
       PCollectionView<MetadataRecord> metadataView) {
     this.metadataView = metadataView;
@@ -112,14 +108,12 @@ public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttrib
   }
 
   public Optional<ALAAttributionRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-
-    ALAAttributionRecord tr = ALAAttributionRecord.newBuilder().setId(source.getId()).build();
-    Interpretation.from(source)
-        .to(tr)
+    return Interpretation.from(source)
+        .to(er -> ALAAttributionRecord.newBuilder().setId(er.getId()).build())
         .via(ALAAttributionInterpreter.interpretDatasetKey(mdr, dataResourceKvStore))
-        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore));
-    // the id is null when there is an error in the interpretation. In these
-    // cases we do not write the taxonRecord because it is totally empty.
-    return Optional.of(tr);
+        .via(ALAAttributionInterpreter.interpretCodes(collectionKvStore))
+        // the id is null when there is an error in the interpretation. In these
+        // cases we do not write the taxonRecord because it is totally empty.
+        .get();
   }
 }

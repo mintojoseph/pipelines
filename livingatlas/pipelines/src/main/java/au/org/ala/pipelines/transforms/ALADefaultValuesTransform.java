@@ -1,14 +1,9 @@
 package au.org.ala.pipelines.transforms;
 
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import com.google.common.base.Strings;
-import java.util.*;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.PTransform;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.PCollection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
@@ -17,6 +12,18 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
+
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.Setup;
+import org.apache.beam.sdk.transforms.PTransform;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.PCollection;
+
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import com.google.common.base.Strings;
+import lombok.Builder;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Most of this class if copied from GBIF' {@link DefaultValuesTransform}. The only difference is
@@ -33,6 +40,7 @@ public class ALADefaultValuesTransform
       TagNamespace.GBIF_DEFAULT_TERM.getNamespace();
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
+  private KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore;
   private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceKvStoreSupplier;
 
@@ -41,11 +49,19 @@ public class ALADefaultValuesTransform
   @Builder(buildMethodName = "create")
   private ALADefaultValuesTransform(
       String datasetId,
-      KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore,
       SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
           dataResourceKvStoreSupplier) {
     this.datasetId = datasetId;
     this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
+  }
+
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (dataResourceKvStore == null && dataResourceKvStoreSupplier != null) {
+      log.info("Initialize dataResourceKvStore");
+      dataResourceKvStore = dataResourceKvStoreSupplier.get();
+    }
   }
 
   /**
@@ -68,23 +84,18 @@ public class ALADefaultValuesTransform
     };
   }
 
+  @SneakyThrows
   public List<MachineTag> getMachineTags() {
-    try {
-      List<MachineTag> tags = new ArrayList<MachineTag>();
-      ALACollectoryMetadata metadata = dataResourceKvStoreSupplier.get().get(datasetId);
-      if (metadata != null
-          && metadata.getDefaultDarwinCoreValues() != null
-          && !metadata.getDefaultDarwinCoreValues().isEmpty()) {
-        for (Map.Entry<String, String> entry : metadata.getDefaultDarwinCoreValues().entrySet()) {
-          tags.add(
-              MachineTag.newInstance(DEFAULT_TERM_NAMESPACE, entry.getKey(), entry.getValue()));
-        }
+    List<MachineTag> tags = new ArrayList<>();
+    ALACollectoryMetadata metadata = dataResourceKvStore.get(datasetId);
+    if (metadata != null
+        && metadata.getDefaultDarwinCoreValues() != null
+        && !metadata.getDefaultDarwinCoreValues().isEmpty()) {
+      for (Map.Entry<String, String> entry : metadata.getDefaultDarwinCoreValues().entrySet()) {
+        tags.add(MachineTag.newInstance(DEFAULT_TERM_NAMESPACE, entry.getKey(), entry.getValue()));
       }
-      return tags;
-    } catch (Exception e) {
-      log.error("Problem retrieving collectory data: " + e.getMessage(), e);
-      throw new RuntimeException(e.getMessage());
     }
+    return tags;
   }
 
   public ExtendedRecord replaceDefaultValues(ExtendedRecord er, List<MachineTag> tags) {

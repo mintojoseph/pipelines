@@ -3,6 +3,9 @@ package au.org.ala.pipelines.parser;
 import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -10,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/main/scala/au/org/ala/biocache/parser/DistanceRangeParser.scala
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DistanceRangeParser {
 
   static String singleNumber = "(-?[0-9]{1,})";
@@ -32,43 +36,43 @@ public class DistanceRangeParser {
         value.replaceAll("\\[", "").replaceAll(",", "").replaceAll("]", "").toLowerCase().trim();
 
     if (normalised.matches(singleNumber + "|" + decimalNumber)) {
-      return Double.valueOf(normalised);
+      return Double.parseDouble(normalised);
     }
 
     // Sequence of pattern match does matter
-    Matcher gl_matcher = Pattern.compile(greaterOrLessThan).matcher(normalised);
-    if (gl_matcher.find()) {
-      String numberStr = gl_matcher.group(2);
-      String uom = gl_matcher.group(3);
-      return convertUOM(Double.valueOf(numberStr), uom);
+    Matcher glMatcher = Pattern.compile(greaterOrLessThan).matcher(normalised);
+    if (glMatcher.find()) {
+      String numberStr = glMatcher.group(2);
+      String uom = glMatcher.group(3);
+      return convertUOM(Double.parseDouble(numberStr), uom);
     }
 
     // range check
-    Matcher range_matcher = Pattern.compile(range).matcher(normalised);
-    if (range_matcher.find()) {
-      String numberStr = range_matcher.group(3);
-      String uom = range_matcher.group(4);
-      return convertUOM(Double.valueOf(numberStr), uom);
+    Matcher rangeMatcher = Pattern.compile(range).matcher(normalised);
+    if (rangeMatcher.find()) {
+      String numberStr = rangeMatcher.group(3);
+      String uom = rangeMatcher.group(4);
+      return convertUOM(Double.parseDouble(numberStr), uom);
     }
 
     // single number metres
-    Matcher sm_matcher = Pattern.compile(singleNumberMetres).matcher(normalised);
-    if (sm_matcher.find()) {
-      String numberStr = sm_matcher.group(1);
-      return Double.valueOf(numberStr);
+    Matcher smMatcher = Pattern.compile(singleNumberMetres).matcher(normalised);
+    if (smMatcher.find()) {
+      String numberStr = smMatcher.group(1);
+      return Double.parseDouble(numberStr);
     }
     // single number feet
-    Matcher sf_matcher = Pattern.compile(singleNumberFeet).matcher(normalised);
-    if (sf_matcher.find()) {
-      String numberStr = sf_matcher.group(1);
-      return convertUOM(Double.valueOf(numberStr), "ft");
+    Matcher sfMatcher = Pattern.compile(singleNumberFeet).matcher(normalised);
+    if (sfMatcher.find()) {
+      String numberStr = sfMatcher.group(1);
+      return convertUOM(Double.parseDouble(numberStr), "ft");
     }
 
     // single number km
-    Matcher skm_matcher = Pattern.compile(singleNumberKilometres).matcher(normalised);
-    if (skm_matcher.find()) {
-      String numberStr = skm_matcher.group(1);
-      return convertUOM(Double.valueOf(numberStr), "km");
+    Matcher skmMatcher = Pattern.compile(singleNumberKilometres).matcher(normalised);
+    if (skmMatcher.find()) {
+      String numberStr = skmMatcher.group(1);
+      return convertUOM(Double.parseDouble(numberStr), "km");
     }
 
     throw new UnknownFormatConversionException("Uncertainty: " + value + " cannot be parsed!");

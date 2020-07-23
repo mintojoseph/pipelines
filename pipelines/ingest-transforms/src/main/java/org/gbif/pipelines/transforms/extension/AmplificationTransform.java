@@ -68,7 +68,7 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AmplificationInterpreter.interpret(client))
-        .get();
+        .getNullable();
   }
 
 }

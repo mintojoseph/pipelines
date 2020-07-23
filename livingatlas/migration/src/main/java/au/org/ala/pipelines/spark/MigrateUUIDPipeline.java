@@ -1,16 +1,11 @@
 package au.org.ala.pipelines.spark;
 
-import static org.apache.spark.sql.functions.col;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -18,10 +13,20 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.spark.api.java.function.FilterFunction;
-import org.apache.spark.api.java.function.MapFunction;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.SparkSession;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 import scala.Tuple4;
+
+import static org.apache.spark.sql.functions.col;
 
 /**
  * A Spark only pipeline that generates AVRO files for UUIDs based on a CSV export from Cassandra.
@@ -30,10 +35,11 @@ import scala.Tuple4;
  *
  * <p>hdfs dfs -rm -R /pipelines-data/<globstar>/1/identifiers
  */
+@Slf4j
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
 
-  @Parameter private List<String> parameters = new ArrayList<String>();
+  @Parameter private List<String> parameters = new ArrayList<>();
 
   @Parameter(
       names = "--inputPath",
@@ -68,7 +74,7 @@ public class MigrateUUIDPipeline implements Serializable {
     FileSystem fileSystem = getFileSystem();
     fileSystem.delete(new Path(targetPath + "/migration-tmp/avro"), true);
 
-    System.out.println("Starting spark job to migrate UUIDs");
+    log.info("Starting spark job to migrate UUIDs");
     Schema schemaAvro =
         new Schema.Parser()
             .parse(
@@ -76,40 +82,33 @@ public class MigrateUUIDPipeline implements Serializable {
                     .getClassLoader()
                     .getResourceAsStream("ala-uuid-record.avsc"));
 
-    System.out.println("Starting spark session");
+    log.info("Starting spark session");
     SparkSession spark = SparkSession.builder().appName("Migration UUIDs").getOrCreate();
 
-    System.out.println("Load CSV");
+    log.info("Load CSV");
     Dataset<Row> dataset = spark.read().csv(inputPath);
 
-    System.out.println("Load UUIDs");
+    log.info("Load UUIDs");
     Dataset<Tuple4<String, String, String, String>> uuidRecords =
         dataset
             .filter(
-                new FilterFunction<Row>() {
-                  @Override
-                  public boolean call(Row row) throws Exception {
-                    return StringUtils.isNotEmpty(row.getString(0))
-                        && row.getString(0).indexOf("|") > 0
-                        && row.getString(0).startsWith("dr");
-                  }
-                })
+                row ->
+                    StringUtils.isNotEmpty(row.getString(0))
+                        && row.getString(0).startsWith("dr")
+                        && row.getString(0).contains("|"))
             .map(
-                new MapFunction<Row, Tuple4<String, String, String, String>>() {
-                  @Override
-                  public Tuple4<String, String, String, String> call(Row row) throws Exception {
-                    String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
-                    return Tuple4.apply(
-                        datasetID,
-                        "temp_" + datasetID + "_" + row.getString(1),
-                        row.getString(1),
-                        row.getString(0));
-                  }
+                row -> {
+                  String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
+                  return Tuple4.apply(
+                      datasetID,
+                      "temp_" + datasetID + "_" + row.getString(1),
+                      row.getString(1),
+                      row.getString(0));
                 },
                 Encoders.tuple(
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
 
-    System.out.println("Write AVRO");
+    log.info("Write AVRO");
     uuidRecords
         .select(
             col("_1").as("datasetID"),
@@ -145,12 +144,12 @@ public class MigrateUUIDPipeline implements Serializable {
       }
     }
 
-    System.out.println("Remove temp directories");
+    log.info("Remove temp directories");
     fileSystem.delete(new Path(targetPath + "/migration-tmp"), true);
 
-    System.out.println("Close session");
+    log.info("Close session");
     spark.close();
-    System.out.println("Closed session. Job finished.");
+    log.info("Closed session. Job finished.");
   }
 
   private FileSystem getFileSystem() throws IOException {

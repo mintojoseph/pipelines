@@ -1,11 +1,8 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.gbif.pipelines.parsers.utils.ModelUtils.*;
-
-import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
-import org.apache.commons.lang3.StringUtils;
+
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -14,6 +11,14 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+
+import org.apache.commons.lang3.StringUtils;
+
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+
+import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 public class ALATemporalInterpreter {
 
@@ -61,17 +66,17 @@ public class ALATemporalInterpreter {
   /** All verification process require TemporalInterpreter.interpretTemporal has been called. */
   private static void checkDateIdentified(TemporalRecord tr) {
     if (tr.getEventDate() != null && tr.getDateIdentified() != null) {
-      TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
+      TemporalParser temporalParser = DateParsers.defaultTemporalParser();
       ParseResult<TemporalAccessor> parsedIdentifiedResult =
-          TEXTDATE_PARSER.parse(tr.getDateIdentified());
+          temporalParser.parse(tr.getDateIdentified());
       ParseResult<TemporalAccessor> parsedEventDateResult =
-          TEXTDATE_PARSER.parse(tr.getEventDate().getGte());
+          temporalParser.parse(tr.getEventDate().getGte());
 
-      if (parsedEventDateResult.isSuccessful() && parsedIdentifiedResult.isSuccessful()) {
-        if (TemporalAccessorUtils.toDate(parsedEventDateResult.getPayload())
-            .after(TemporalAccessorUtils.toDate(parsedIdentifiedResult.getPayload()))) {
-          addIssue(tr, ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name());
-        }
+      if (parsedEventDateResult.isSuccessful()
+          && parsedIdentifiedResult.isSuccessful()
+          && TemporalAccessorUtils.toDate(parsedEventDateResult.getPayload())
+              .after(TemporalAccessorUtils.toDate(parsedIdentifiedResult.getPayload()))) {
+        addIssue(tr, ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name());
       }
     }
   }
@@ -79,17 +84,17 @@ public class ALATemporalInterpreter {
   /** All verification process require TemporalInterpreter.interpretTemporal has been called. */
   private static void checkGeoreferencedDate(ExtendedRecord er, TemporalRecord tr) {
     if (tr.getEventDate() != null && hasValue(er, DwcTerm.georeferencedDate)) {
-      TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
+      TemporalParser temporalParser = DateParsers.defaultTemporalParser();
       ParseResult<TemporalAccessor> parsedGeoreferencedResult =
-          TEXTDATE_PARSER.parse(extractValue(er, DwcTerm.georeferencedDate));
+          temporalParser.parse(extractValue(er, DwcTerm.georeferencedDate));
       ParseResult<TemporalAccessor> parsedEventDateResult =
-          TEXTDATE_PARSER.parse(tr.getEventDate().getGte());
+          temporalParser.parse(tr.getEventDate().getGte());
 
-      if (parsedEventDateResult.isSuccessful() && parsedGeoreferencedResult.isSuccessful()) {
-        if (TemporalAccessorUtils.toDate(parsedEventDateResult.getPayload())
-            .before(TemporalAccessorUtils.toDate(parsedGeoreferencedResult.getPayload()))) {
-          addIssue(tr, ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name());
-        }
+      if (parsedEventDateResult.isSuccessful()
+          && parsedGeoreferencedResult.isSuccessful()
+          && TemporalAccessorUtils.toDate(parsedEventDateResult.getPayload())
+              .before(TemporalAccessorUtils.toDate(parsedGeoreferencedResult.getPayload()))) {
+        addIssue(tr, ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name());
       }
     }
   }

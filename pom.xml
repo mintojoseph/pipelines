@@ -54,6 +54,14 @@
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
+    <repository>
+      <id>ALA</id>
+      <url>https://nexus.ala.org.au/content/repositories/releases</url>
+    </repository>
+    <repository>
+      <id>ALA-snapshots</id>
+      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
+    </repository>
   </repositories>
 
   <properties>

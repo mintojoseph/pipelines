@@ -89,7 +89,7 @@ public class LocationFeatureTransform extends Transform<LocationRecord, Location
             .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
             .isPresent())
         .via(LocationFeatureInterpreter.interpret(kvStore))
-        .get();
+        .getNullable();
   }
 
 }

@@ -1,17 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
-import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
-
-import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.names.ws.api.NameSearch;
-import au.org.ala.names.ws.api.NameUsageMatch;
-import au.org.ala.pipelines.interpreters.ALATaxonomyInterpreter;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TypeDescriptor;
+
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
@@ -21,6 +11,19 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
+
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
+
+import au.org.ala.kvs.client.ALACollectoryMetadata;
+import au.org.ala.names.ws.api.NameSearch;
+import au.org.ala.names.ws.api.NameUsageMatch;
+import au.org.ala.pipelines.interpreters.ALATaxonomyInterpreter;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+
+import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
 /**
  * ALA taxonomy transform for adding ALA taxonomy to interpreted occurrence data.
@@ -36,7 +39,7 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonRecord> {
 
-  private String datasetId;
+  private final String datasetId;
   private KeyValueStore<NameSearch, NameUsageMatch> nameMatchStore;
   private SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier;
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
@@ -47,8 +50,6 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   private ALATaxonomyTransform(
       String datasetId,
       SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier,
-      KeyValueStore<NameSearch, NameUsageMatch> nameMatchStore,
-      KeyValueStore<String, ALACollectoryMetadata> dataResourceStore,
       SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
           dataResourceStoreSupplier) {
     super(
@@ -57,9 +58,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
         ALATaxonomyTransform.class.getName(),
         "alaTaxonRecordsCount");
     this.datasetId = datasetId;
-    this.nameMatchStore = nameMatchStore;
     this.nameMatchStoreSupplier = nameMatchStoreSupplier;
-    this.dataResourceStore = dataResourceStore;
     this.dataResourceStoreSupplier = dataResourceStoreSupplier;
   }
 
@@ -74,48 +73,28 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     return this;
   }
 
-  public ALATaxonomyTransform init() {
-    setup();
-    return this;
-  }
-
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (this.nameMatchStore == null && this.nameMatchStoreSupplier != null) {
+    if (nameMatchStore == null && nameMatchStoreSupplier != null) {
       log.info("Initialize NameUsageMatchKvStore");
-      this.nameMatchStore = this.nameMatchStoreSupplier.get();
+      nameMatchStore = nameMatchStoreSupplier.get();
     }
-    if (this.dataResourceStore == null && this.dataResourceStoreSupplier != null) {
+    if (dataResourceStore == null && dataResourceStoreSupplier != null) {
       log.info("Initialize CollectoryKvStore");
-      this.dataResourceStore = this.dataResourceStoreSupplier.get();
+      dataResourceStore = dataResourceStoreSupplier.get();
     }
-  }
-
-  /** Beam @Teardown closes initialized resources */
-  @Teardown
-  public void tearDown() {
-    //    if (Objects.nonNull(kvStore)) {
-    //      try {
-    //        log.info("Close NameUsageMatchKvStore");
-    //        //kvStore.close();
-    //      } catch (IOException ex) {
-    //        log.error("Error closing KV Store", ex);
-    //      }
-    //    }
   }
 
   @Override
   public Optional<ALATaxonRecord> convert(ExtendedRecord source) {
-    ALACollectoryMetadata dataResource = this.dataResourceStore.get(datasetId);
-    ALATaxonRecord tr = ALATaxonRecord.newBuilder().setId(source.getId()).build();
-    Interpretation.from(source)
-        .to(tr)
+    ALACollectoryMetadata dataResource = dataResourceStore.get(datasetId);
+    return Interpretation.from(source)
+        .to(er -> ALATaxonRecord.newBuilder().setId(er.getId()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(ALATaxonomyInterpreter.alaTaxonomyInterpreter(dataResource, nameMatchStore));
-
-    // the id is null when there is an error in the interpretation. In these
-    // cases we do not write the taxonRecord because it is totally empty.
-    return Optional.of(tr);
+        .via(ALATaxonomyInterpreter.alaTaxonomyInterpreter(dataResource, nameMatchStore))
+        // the id is null when there is an error in the interpretation. In these
+        // cases we do not write the taxonRecord because it is totally empty.
+        .get();
   }
 }

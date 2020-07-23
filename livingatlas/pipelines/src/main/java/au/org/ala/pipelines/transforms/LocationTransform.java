@@ -138,7 +138,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .via(ALALocationInterpreter::interpretGeoreferencedDate)
             .via(ALALocationInterpreter::interpretGeoreferenceTerms)
             .via(ALALocationInterpreter.verifyLocationInfo(alaConfig))
-            .get();
+            .getNullable();
 
     result.ifPresent(r -> this.incCounter());
 

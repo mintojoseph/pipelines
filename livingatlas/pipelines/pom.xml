@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -9,24 +10,12 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
-  <version>2.5.5-SNAPSHOT</version>
 
   <name>Living Atlas Pipelines</name>
   <description>Extensions to GBIF pipelines to support ALA and the Living Atlas community</description>
 
-  <repositories>
-      <repository>
-          <id>ALA</id>
-          <url>https://nexus.ala.org.au/content/repositories/releases</url>
-      </repository>
-    <repository>
-      <id>ALA-snapshots</id>
-      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
 
   <build>
     <testResources>
@@ -129,7 +118,7 @@
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
                 </transformer>
@@ -212,7 +201,7 @@
                   <SOLR_HOST>localhost</SOLR_HOST>
                 </env>
                 <entrypoint>
-                  <shell>solr start -c -f  -p ${solr8.http.port}</shell>
+                  <shell>solr start -c -f -p ${solr8.http.port}</shell>
                 </entrypoint>
               </run>
             </image>
@@ -240,49 +229,6 @@
     </plugins>
   </build>
 
-  <properties>
-    <!-- Common variables -->
-    <surefireArgLine>-Xmx1024m</surefireArgLine>
-
-    <!-- ALA libraries -->
-    <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
-
-    <!-- Default port for ALA Name Matcher Docker container -->
-    <alanm.port>9279</alanm.port>
-    <alanm.admin.port>9280</alanm.admin.port>
-    <alanm.host>localhost</alanm.host>
-    <solr8.zk.port>9973</solr8.zk.port>
-    <solr8.http.port>8973</solr8.http.port>
-    <solr8.zk.host>localhost</solr8.zk.host>
-    <solr8.http.host>localhost</solr8.http.host>
-    <collectory.url>https://collections.ala.org.au</collectory.url>
-
-    <!-- Tools-->
-    <geotools.version>20.5</geotools.version>
-    <commons-configuration.version>1.6</commons-configuration.version>
-    <netty.version>3.9.9.Final</netty.version>
-    <netty-all.version>4.1.42.Final</netty-all.version>
-    <ingest-hdfs-table.version>2.2.34</ingest-hdfs-table.version>
-    <snakeyaml.version>1.25</snakeyaml.version>
-    <streamex.version>0.7.2</streamex.version>
-    <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
-    <jackson.version>2.11.1</jackson.version>
-    <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
-    <jcommander.version>1.78</jcommander.version>
-    <layers-store.version>2.0.3</layers-store.version>
-    <junit.version>5.6.2</junit.version>
-
-    <!-- GBIF parent currently using 2.4.0 -->
-    <spark.embedded.version>2.4.5</spark.embedded.version>
-
-    <!-- Plugins -->
-    <io.fabric8.version>0.33.0</io.fabric8.version>
-    <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
-
-    <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
-    <jcabi-log.version>0.18.1</jcabi-log.version>
-  </properties>
-
   <scm>
     <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
     <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
@@ -306,7 +252,6 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib-common</artifactId>
-      <version>${okio-kotlin.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -392,10 +337,10 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
       <exclusions>
-          <exclusion>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-          </exclusion>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

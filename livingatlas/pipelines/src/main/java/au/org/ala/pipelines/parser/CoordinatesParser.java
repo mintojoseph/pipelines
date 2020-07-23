@@ -28,7 +28,7 @@ import org.gbif.pipelines.parsers.parsers.location.parser.Wgs84Projection;
  *
  * <p>Parser for the Dwc Terms related to the coordinates.
  */
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CoordinatesParser {
 
   // parses decimal latitude and longitude fields

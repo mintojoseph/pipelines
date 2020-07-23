@@ -73,7 +73,7 @@ public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValue
     Optional<TaggedValueRecord> result = Interpretation.from(source)
       .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
       .via(TaggedValuesInterpreter.interpret(mdr))
-      .get();
+      .getNullable();
 
     result.ifPresent(r -> this.incCounter());
 

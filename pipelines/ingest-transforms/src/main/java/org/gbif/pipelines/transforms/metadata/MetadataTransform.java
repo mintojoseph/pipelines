@@ -82,7 +82,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
         .via(MetadataInterpreter.interpret(client))
         .via(MetadataInterpreter.interpretCrawlId(attempt))
         .via(MetadataInterpreter.interpretEndpointType(endpointType))
-        .get();
+        .getNullable();
   }
 
   /**

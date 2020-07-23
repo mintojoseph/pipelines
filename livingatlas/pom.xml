@@ -1,45 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.gbif.pipelines</groupId>
-        <artifactId>pipelines-parent</artifactId>
-        <version>2.5.5-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
-
-    <groupId>au.org.ala</groupId>
+  <parent>
+    <groupId>org.gbif.pipelines</groupId>
+    <artifactId>pipelines-parent</artifactId>
     <version>2.5.5-SNAPSHOT</version>
-    <artifactId>livingatlas</artifactId>
-    <packaging>pom</packaging>
-    <name>Living Atlas Pipelines Parent POM</name>
-    <description>
-    </description>
-    <modules>
-        <module>pipelines</module>
-        <module>migration</module>
-    </modules>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <!-- Runs in compile phase to fail fast in case of formatting issues.-->
-                        <id>spotless-check</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+  <groupId>au.org.ala</groupId>
+  <artifactId>livingatlas</artifactId>
+
+  <packaging>pom</packaging>
+  <name>Living Atlas Pipelines Parent POM</name>
+
+  <modules>
+    <module>pipelines</module>
+    <module>migration</module>
+  </modules>
+
+  <properties>
+    <!-- Common variables -->
+    <surefireArgLine>-Xmx1024m</surefireArgLine>
+
+    <!-- ALA libraries -->
+    <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
+
+    <!-- Default port for ALA Name Matcher Docker container -->
+    <alanm.port>9279</alanm.port>
+    <alanm.admin.port>9280</alanm.admin.port>
+    <alanm.host>localhost</alanm.host>
+    <solr8.zk.port>9973</solr8.zk.port>
+    <solr8.http.port>8973</solr8.http.port>
+    <solr8.zk.host>localhost</solr8.zk.host>
+    <solr8.http.host>localhost</solr8.http.host>
+    <collectory.url>https://collections.ala.org.au</collectory.url>
+
+    <!-- Tools-->
+    <geotools.version>20.5</geotools.version>
+    <commons-configuration.version>1.6</commons-configuration.version>
+    <netty.version>3.9.9.Final</netty.version>
+    <netty-all.version>4.1.42.Final</netty-all.version>
+    <ingest-hdfs-table.version>2.2.34</ingest-hdfs-table.version>
+    <snakeyaml.version>1.25</snakeyaml.version>
+    <streamex.version>0.7.2</streamex.version>
+    <!-- This is overriding GBIF mother pom which is using a 2.11.0.rc1  -->
+    <jackson.version>2.11.1</jackson.version>
+    <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
+    <jcommander.version>1.78</jcommander.version>
+    <layers-store.version>2.0.3</layers-store.version>
+    <junit.version>5.6.2</junit.version>
+
+    <!-- GBIF parent currently using 2.4.0 -->
+    <spark.embedded.version>2.4.5</spark.embedded.version>
+
+    <!-- Plugins -->
+    <io.fabric8.version>0.33.0</io.fabric8.version>
+    <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
+
+    <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
+    <jcabi-log.version>0.18.1</jcabi-log.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Runs in compile phase to fail fast in case of formatting issues.-->
+            <id>spotless-check</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

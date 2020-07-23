@@ -1,17 +1,5 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
-
-import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.pipelines.parser.CoordinatesParser;
-import au.org.ala.pipelines.parser.DistanceRangeParser;
-import au.org.ala.pipelines.vocabulary.*;
-import com.google.common.base.Strings;
-import com.google.common.collect.Range;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -20,7 +8,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import lombok.extern.slf4j.Slf4j;
+
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -34,6 +22,25 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
+
+import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.pipelines.parser.CoordinatesParser;
+import au.org.ala.pipelines.parser.DistanceRangeParser;
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import au.org.ala.pipelines.vocabulary.CountryCentrePoints;
+import au.org.ala.pipelines.vocabulary.StateProvince;
+import au.org.ala.pipelines.vocabulary.StateProvinceCentrePoints;
+import com.google.common.base.Strings;
+import com.google.common.collect.Range;
+import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
+
+import static joptsimple.internal.Strings.LINE_SEPARATOR;
 
 /** Extensions to GBIF's {@link LocationInterpreter} */
 @Slf4j
@@ -114,27 +121,25 @@ public class ALALocationInterpreter {
             String error = "FATAL：" + fnfe.getMessage();
 
             error =
-                joptsimple.internal.Strings.LINE_SEPARATOR
+                LINE_SEPARATOR
                     + joptsimple.internal.Strings.repeat('*', 128)
-                    + joptsimple.internal.Strings.LINE_SEPARATOR
+                    + LINE_SEPARATOR
                     + error
-                    + joptsimple.internal.Strings.LINE_SEPARATOR;
+                    + LINE_SEPARATOR;
             error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
+                LINE_SEPARATOR
                     + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
             error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
+                LINE_SEPARATOR
                     + "Those properties need to be defined in a property file given by -- properties argument.";
-            error += joptsimple.internal.Strings.LINE_SEPARATOR;
+            error += LINE_SEPARATOR;
             error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
+                LINE_SEPARATOR
                     + "\t"
                     + String.format(
                         "%-32s%-48s",
                         "locationInfoConfig.countryCentrePointsFile", "Contry centres file");
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + joptsimple.internal.Strings.repeat('*', 128);
+            error += LINE_SEPARATOR + joptsimple.internal.Strings.repeat('*', 128);
             log.error(error);
             throw new RuntimeException(error);
           }
