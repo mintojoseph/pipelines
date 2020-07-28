@@ -70,14 +70,11 @@ public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValue
   }
 
   public Optional<TaggedValueRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-    Optional<TaggedValueRecord> result = Interpretation.from(source)
-      .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
-      .via(TaggedValuesInterpreter.interpret(mdr))
-      .get();
-
-    result.ifPresent(r -> this.incCounter());
-
-    return result;
+    return Interpretation.from(source)
+        .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
+        .via(TaggedValuesInterpreter.interpret(mdr))
+        .via(r -> this.incCounter())
+        .getOfNullable();
   }
 
 }
