@@ -1,60 +1,28 @@
 package org.gbif.pipelines.core.converters;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TimeZone;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.TermFactory;
-import org.gbif.occurrence.common.TermUtils;
-import org.gbif.occurrence.download.hive.HiveColumns;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
-import org.gbif.pipelines.core.utils.TemporalUtils;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-
-import org.apache.avro.Schema;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.beanutils.PropertyUtils;
-
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.gbif.api.vocabulary.License;
+import org.gbif.dwc.terms.*;
+import org.gbif.occurrence.common.TermUtils;
+import org.gbif.occurrence.download.hive.HiveColumns;
+import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
+import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.io.avro.*;
+
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
@@ -198,14 +166,18 @@ public class OccurrenceHdfsRecordConverter {
       hr.setRepatriated(lr.getRepatriated());
       hr.setLocality(lr.getLocality());
       hr.setPublishingcountry(lr.getPublishingCountry());
-      hr.setLevel0gid(lr.getGadmLevel0Gid());
-      hr.setLevel1gid(lr.getGadmLevel1Gid());
-      hr.setLevel2gid(lr.getGadmLevel2Gid());
-      hr.setLevel3gid(lr.getGadmLevel3Gid());
-      hr.setLevel0name(lr.getGadmLevel0Name());
-      hr.setLevel1name(lr.getGadmLevel1Name());
-      hr.setLevel2name(lr.getGadmLevel2Name());
-      hr.setLevel3name(lr.getGadmLevel3Name());
+      Optional.ofNullable(lr.getGadm())
+          .ifPresent(
+              g -> {
+                hr.setLevel0gid(g.getLevel0Gid());
+                hr.setLevel1gid(g.getLevel1Gid());
+                hr.setLevel2gid(g.getLevel2Gid());
+                hr.setLevel3gid(g.getLevel3Gid());
+                hr.setLevel0name(g.getLevel0Name());
+                hr.setLevel1name(g.getLevel1Name());
+                hr.setLevel2name(g.getLevel2Name());
+                hr.setLevel3name(g.getLevel3Name());
+              });
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);

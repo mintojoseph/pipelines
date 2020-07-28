@@ -1,25 +1,19 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
@@ -51,17 +45,6 @@ public class LocationMatcher {
 
     // Match country
     return country != null ? applyWithCountry() : applyWithoutCountry();
-  }
-
-  public Optional<GadmFeatures> applyGadm() {
-    // Check parameters
-    Objects.requireNonNull(latLng);
-    if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
-      throw new IllegalArgumentException("Empty coordinates");
-    }
-
-    // Match to GADM administrative regions
-    return getGadmFromCoordinates(latLng);
   }
 
   private ParsedField<ParsedLocation> applyWithCountry() {
@@ -134,20 +117,6 @@ public class LocationMatcher {
       }
       if (isAntarctica(latLng.getLatitude(), this.country)) {
         return Optional.of(Collections.singletonList(Country.ANTARCTICA));
-      }
-    }
-    return Optional.empty();
-  }
-
-  private Optional<GadmFeatures> getGadmFromCoordinates(LatLng latLng) {
-    if (latLng.isValid()) {
-      GeocodeResponse geocodeResponse = null;
-      geocodeResponse = geocodeKvStore.get(latLng);
-
-      if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
-        GadmFeatures gf = new GadmFeatures();
-        geocodeResponse.getLocations().stream().forEachOrdered(gf::accept);
-        return Optional.of(gf);
       }
     }
     return Optional.empty();
