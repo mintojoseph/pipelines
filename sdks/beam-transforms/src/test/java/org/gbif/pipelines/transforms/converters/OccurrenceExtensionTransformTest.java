@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord.Builder;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -138,7 +137,7 @@ public class OccurrenceExtensionTransformTest {
             ext.put("somethingExt", array[2]);
           }
 
-          Builder builder = ExtendedRecord.newBuilder().setCoreTerms(ext);
+          ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setCoreTerms(ext);
 
           if (isHashedId) {
             builder.setId(HashUtils.getSha1(datasetId, array[0]));
