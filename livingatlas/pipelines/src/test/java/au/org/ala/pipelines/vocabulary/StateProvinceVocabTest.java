@@ -64,4 +64,21 @@ public class StateProvinceVocabTest {
             });
     assertTrue(countryCentreException.getMessage().contains("none_exists.txt"));
   }
+
+  @Test
+  public void treadSafeTest() throws IOException{
+    ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig());
+
+    for(int i=0; i< 1; i++){
+      Thread newThread = new Thread(() -> {
+        try {
+          assertEquals(6, StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig()).size()) ;
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+      });
+      newThread.start();
+    }
+  }
 }

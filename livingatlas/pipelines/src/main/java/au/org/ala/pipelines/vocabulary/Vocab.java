@@ -32,7 +32,7 @@ public class Vocab {
     return Vocab.loadVocabFromStream(is);
   }
 
-  public static Vocab loadVocabFromStream(InputStream is) {
+  public synchronized static Vocab loadVocabFromStream(InputStream is) {
 
     Vocab vocab = new Vocab();
     Stemmer stemmer = new Stemmer();

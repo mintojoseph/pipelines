@@ -38,7 +38,7 @@ public class CentrePoints {
     return getInstance(is);
   }
 
-  public static CentrePoints getInstance(InputStream is) {
+  public synchronized static CentrePoints getInstance(InputStream is){
     cp = new CentrePoints();
     new BufferedReader(new InputStreamReader(is))
         .lines()

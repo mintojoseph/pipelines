@@ -38,13 +38,13 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 /** Interprets date representations into a Date to support API v1 */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 public class TemporalInterpreter {
 
   private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
 
-  private static final TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
+  protected static final TemporalParser TEXTDATE_PARSER = DateParsers.defaultTemporalParser();
 
   public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
     OccurrenceParseResult<TemporalAccessor> eventResult = interpretRecordedDate(er);

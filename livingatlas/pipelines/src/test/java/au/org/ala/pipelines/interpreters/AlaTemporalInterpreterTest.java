@@ -1,6 +1,8 @@
 package au.org.ala.pipelines.interpreters;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.temporal.TemporalAccessor;
@@ -54,7 +56,7 @@ public class AlaTemporalInterpreterTest {
     map.put(DwcTerm.month.qualifiedName(), " "); // keep the space at the end
     map.put(DwcTerm.day.qualifiedName(), "");
     map.put(DwcTerm.eventDate.qualifiedName(), "1980-2-2");
-    map.put(DwcTerm.dateIdentified.qualifiedName(), "1979-2-3");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "2/3/1979");
     map.put(DwcTerm.georeferencedDate.qualifiedName(), "1981-1-1");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
@@ -70,27 +72,49 @@ public class AlaTemporalInterpreterTest {
         tr.getIssues().getIssueList().toArray());
   }
 
+  /**
+   * ALA temporalInterpret can interpret 2/3/1980
+   * GBIF cannot
+   */
   @Test
   public void testAUformatDatessertions() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.year.qualifiedName(), "");
     map.put(DwcTerm.month.qualifiedName(), " "); // keep the space at the end
     map.put(DwcTerm.day.qualifiedName(), "");
-    map.put(DwcTerm.eventDate.qualifiedName(), "2/2/1980");
-    map.put(DwcTerm.dateIdentified.qualifiedName(), "1979-2-3");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2/3/1980");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "4/3/1979");
     map.put(DwcTerm.georeferencedDate.qualifiedName(), "1981-1-1");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
     ALATemporalInterpreter.interpretTemporal(er, tr);
+    assertEquals("1980-03-02T00:00", tr.getEventDate().getGte());
+    assertTrue(tr.getIssues().getIssueList().contains(ALAOccurrenceIssue.EVENTDATE_ASSUMED_DMY_FORMAT
+        .name()));
 
-    assertArrayEquals(
-        new String[] {
-          ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(),
-          ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name()
-        },
-        tr.getIssues().getIssueList().toArray());
+  }
+
+  /**
+   * GBIF can interpret 20/3/1980
+   */
+  @Test
+  public void testRecognisedAUformatDatessertions() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.year.qualifiedName(), "");
+    map.put(DwcTerm.month.qualifiedName(), " "); // keep the space at the end
+    map.put(DwcTerm.day.qualifiedName(), "");
+    map.put(DwcTerm.eventDate.qualifiedName(), "20/3/1980");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    ALATemporalInterpreter.interpretTemporal(er, tr);
+    assertEquals("1980-03-20T00:00", tr.getEventDate().getGte());
+    assertTrue(!tr.getIssues().getIssueList().contains(ALAOccurrenceIssue.EVENTDATE_ASSUMED_DMY_FORMAT
+        .name()));
+
   }
 
   @Test

@@ -338,6 +338,31 @@ public class AlaLocationInterpreterTest {
     assertEquals(Country.AUSTRALIA.getTitle(), lr.getCountry());
   }
 
+  @Test
+  public void assertCountry() {
+    KeyValueTestStoreStub store = new KeyValueTestStoreStub();
+    store.put(new LatLng(-19.38111, 146.44889), createCountryResponse(Country.AUSTRALIA));
+
+    MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
+
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-19.38111");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.44889");
+    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
+    coreMap.put(DwcTerm.country.qualifiedName(), "zzzzzz");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+
+    LocationInterpreter.interpretCountryAndCoordinates(store, mdr).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+
+    assertArrayEquals(
+        new String[] {OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH.name()},
+        lr.getIssues().getIssueList().toArray());
+    assertEquals(Country.UNKNOWN.getIso2LetterCode(), lr.getCountryCode());
+  }
+
   /** Only works for country */
   private static GeocodeResponse createCountryResponse(Country country) {
     Location location = new Location();

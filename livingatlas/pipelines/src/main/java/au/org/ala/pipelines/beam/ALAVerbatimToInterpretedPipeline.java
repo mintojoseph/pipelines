@@ -9,6 +9,7 @@ import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.FileNotFoundException;
@@ -140,14 +141,14 @@ public class ALAVerbatimToInterpretedPipeline {
             .useExtendedRecordId(useExtendedRecordId)
             .create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
-
+    // ALA specific - Temporal
+    ALATemporalTransform temporalTransform = ALATemporalTransform.create();
     // ALA specific - Attribution
     ALAAttributionTransform alaAttributionTransform =
         ALAAttributionTransform.builder()
