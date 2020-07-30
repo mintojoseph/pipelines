@@ -19,9 +19,10 @@ import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class TemporalInterpreter {
+  private final static DefaultTemporalInterpreter temporalInterpreter = DefaultTemporalInterpreter.getInstance();
 
   public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr){
-      DefaultTemporalInterpreter.getInstance().interpretTemporal(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
   }
 
   /**
@@ -37,13 +38,11 @@ public class TemporalInterpreter {
    */
   public static  OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(String year, String month, String day,
       String dateString) {
-
-    return  DefaultTemporalInterpreter
-        .getInstance().interpretRecordedDate(year,month, day,dateString);
+    return  temporalInterpreter.interpretRecordedDate(year,month, day,dateString);
   }
 
   public static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(ExtendedRecord er){
-      return DefaultTemporalInterpreter.getInstance().interpretRecordedDate(er);
+      return temporalInterpreter.interpretRecordedDate(er);
   }
 
   /**
@@ -52,9 +51,7 @@ public class TemporalInterpreter {
   public static  OccurrenceParseResult<TemporalAccessor> interpretLocalDate(String dateString,
       Range<LocalDate> likelyRange,
       OccurrenceIssue unlikelyIssue) {
-
-    return DefaultTemporalInterpreter
-        .getInstance().interpretLocalDate(dateString, likelyRange, unlikelyIssue);
+    return temporalInterpreter.interpretLocalDate(dateString, likelyRange, unlikelyIssue);
   }
 
 }

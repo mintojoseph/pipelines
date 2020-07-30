@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Setter;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -44,8 +45,8 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
  *
  * */
 @Slf4j
-@Data(staticConstructor="of")
 @NoArgsConstructor(access = PRIVATE)
+@AllArgsConstructor(access = PRIVATE)
 public class DefaultTemporalInterpreter {
 
   public static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
@@ -55,7 +56,6 @@ public class DefaultTemporalInterpreter {
   private static final String RECORDED_DATE_AMBIGUOUS = "RECORDED_DATE_AMBIGUOUS";
   private static final String IDENTIFIED_DATE_AMBIGUOUS = "IDENTIFIED_DATE_AMBIGUOUS";
 
-  @Setter
   private TemporalParser temporalParser = DateParsers.defaultTemporalParser();
 
   /**
@@ -67,15 +67,13 @@ public class DefaultTemporalInterpreter {
   }
 
   /**
-   * Specify a date parser, e.g support DMY format
+   * Specify a date parser
    *
    * @param parser
    * @return
    */
   public static DefaultTemporalInterpreter getInstance(TemporalParser parser){
-    DefaultTemporalInterpreter gti = new DefaultTemporalInterpreter();
-    gti.setTemporalParser(parser);
-    return gti;
+    return new DefaultTemporalInterpreter(parser);
   }
 
   /**
