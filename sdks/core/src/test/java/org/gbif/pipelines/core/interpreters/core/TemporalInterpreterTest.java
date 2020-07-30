@@ -60,18 +60,22 @@ public class TemporalInterpreterTest {
 
   @Test
   public void testTemporalInterpreter() {
-    assertTrue(TemporalInterpreter.isValidDate(Year.of(2005), true));
-    assertTrue(TemporalInterpreter.isValidDate(YearMonth.of(2005, 1), true));
-    assertTrue(TemporalInterpreter.isValidDate(LocalDate.of(2005, 1, 1), true));
-    assertTrue(TemporalInterpreter.isValidDate(LocalDateTime.of(2005, 1, 1, 2, 3, 4), true));
-    assertTrue(TemporalInterpreter.isValidDate(LocalDate.now(), true));
-    assertTrue(TemporalInterpreter.isValidDate(LocalDateTime.now().plus(23, ChronoUnit.HOURS), true));
+    assertTrue(DefaultTemporalInterpreter.getInstance().isValidDate(Year.of(2005), true));
+    assertTrue(DefaultTemporalInterpreter.getInstance().isValidDate(YearMonth.of(2005, 1), true));
+    assertTrue(DefaultTemporalInterpreter.getInstance().isValidDate(LocalDate.of(2005, 1, 1), true));
+    assertTrue(
+        DefaultTemporalInterpreter
+            .getInstance().isValidDate(LocalDateTime.of(2005, 1, 1, 2, 3, 4), true));
+    assertTrue(DefaultTemporalInterpreter.getInstance().isValidDate(LocalDate.now(), true));
+    assertTrue(DefaultTemporalInterpreter
+        .getInstance().isValidDate(LocalDateTime.now().plus(23, ChronoUnit.HOURS), true));
 
     // Dates out of bounds
-    assertFalse(TemporalInterpreter.isValidDate(YearMonth.of(1599, 12), true));
+    assertFalse(DefaultTemporalInterpreter.getInstance().isValidDate(YearMonth.of(1599, 12), true));
 
     // we tolerate a offset of 1 day
-    assertFalse(TemporalInterpreter.isValidDate(LocalDate.now().plusDays(2), true));
+    assertFalse(
+        DefaultTemporalInterpreter.getInstance().isValidDate(LocalDate.now().plusDays(2), true));
   }
 
   @Test

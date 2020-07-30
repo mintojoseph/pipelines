@@ -41,7 +41,10 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
       InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
   ID_PRE_OCCURRENCE(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
   GEOREFERENCED_DATE_UNLIKELY(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
-  EVENTDATE_ASSUMED_DMY_FORMAT(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+  GEOREFERENCED_DATE_AMBIGUOUS(
+      InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+  RECORDED_DATE_AMBIGUOUS(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+  IDENTIFIED_DATE_AMBIGUOUS(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
 
   FIRST_OF_MONTH(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
   FIRST_OF_YEAR(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),

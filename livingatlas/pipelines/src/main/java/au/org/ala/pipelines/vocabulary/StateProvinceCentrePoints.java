@@ -36,22 +36,25 @@ public class StateProvinceCentrePoints {
     return cp;
   }
 
-  public static void main(String[] args){
+  public static void main(String[] args) {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
     alaConfig.setLocationInfoConfig(new LocationInfoConfig());
 
-    for(int i=0; i< 100; i++){
-      Thread newThread = new Thread(() -> {
-        try {
-          //assertEquals(6, StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig()).size()) ;
-          System.out.println(StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig()).size());
-        }catch(Exception e){
-          e.printStackTrace();
-        }
-      });
+    for (int i = 0; i < 100; i++) {
+      Thread newThread =
+          new Thread(
+              () -> {
+                try {
+                  // assertEquals(6,
+                  // StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig()).size()) ;
+                  System.out.println(
+                      StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
+                          .size());
+                } catch (Exception e) {
+                  e.printStackTrace();
+                }
+              });
       newThread.start();
     }
-
-
   }
 }

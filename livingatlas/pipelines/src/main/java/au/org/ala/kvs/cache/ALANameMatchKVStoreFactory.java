@@ -1,9 +1,9 @@
 package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.names.ws.api.NameMatchService;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
-import  au.org.ala.names.ws.api.NameMatchService;
 import au.org.ala.names.ws.client.ALANameUsageMatchServiceClient;
 import au.org.ala.ws.ClientConfiguration;
 import java.io.IOException;

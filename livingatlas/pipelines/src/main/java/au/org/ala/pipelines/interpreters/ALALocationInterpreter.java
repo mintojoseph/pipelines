@@ -3,32 +3,23 @@ package au.org.ala.pipelines.interpreters;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.parser.DistanceRangeParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
-import com.google.common.collect.Range;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.core.OccurrenceParseResult;
-import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
-import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
@@ -225,31 +216,7 @@ public class ALALocationInterpreter {
    * @param lr
    */
   public static void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
-    if (hasValue(er, DwcTerm.georeferencedDate)) {
-      LocalDate upperBound = LocalDate.now().plusDays(1);
-      Range<LocalDate> validRecordedDateRange =
-          Range.closed(ALATemporalInterpreter.MIN_LOCAL_DATE, upperBound);
-
-      // GBIF TemporalInterpreter only accepts OccurrenceIssue
-      // Convert GBIF IDENTIFIED_DATE_UNLIKELY to ALA GEOREFERENCED_DATE_UNLIKELY
-      OccurrenceParseResult<TemporalAccessor> parsed =
-          TemporalInterpreter.interpretLocalDate(
-              extractValue(er, DwcTerm.georeferencedDate),
-              validRecordedDateRange,
-              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
-      if (parsed.isSuccessful()) {
-        Optional.ofNullable(
-                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
-            .map(LocalDateTime::toString)
-            .ifPresent(lr::setGeoreferencedDate);
-      }
-
-      if (parsed.getIssues().contains(OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY)) {
-        addIssue(lr, ALAOccurrenceIssue.GEOREFERENCED_DATE_UNLIKELY.name());
-      }
-    } else {
-      addIssue(lr, ALAOccurrenceIssue.MISSING_GEOREFERENCE_DATE.name());
-    }
+    ALATemporalInterpreter.interpretGeoreferencedDate(er, lr);
   }
 
   /**

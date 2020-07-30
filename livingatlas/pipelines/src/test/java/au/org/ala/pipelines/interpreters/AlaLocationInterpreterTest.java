@@ -358,9 +358,11 @@ public class AlaLocationInterpreterTest {
     ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
 
     assertArrayEquals(
-        new String[] {OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH.name()},
+        new String[] {
+          OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES.name(),
+          OccurrenceIssue.COUNTRY_INVALID.name()
+        },
         lr.getIssues().getIssueList().toArray());
-    assertEquals(Country.UNKNOWN.getIso2LetterCode(), lr.getCountryCode());
   }
 
   /** Only works for country */
