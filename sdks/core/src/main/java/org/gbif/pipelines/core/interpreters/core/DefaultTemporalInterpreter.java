@@ -1,5 +1,14 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static lombok.AccessLevel.PRIVATE;
+import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
+import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssueSet;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Range;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
@@ -8,10 +17,10 @@ import java.time.temporal.TemporalQueries;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
@@ -26,30 +35,13 @@ import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Range;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static lombok.AccessLevel.PRIVATE;
-import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
-import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssueSet;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
-
-/**
- * Interprets date representations into a Date to support API v1
- *
- * */
+/** Interprets date representations into a Date to support API v1 */
 @Slf4j
 @NoArgsConstructor(access = PRIVATE)
 @AllArgsConstructor(access = PRIVATE)
 public class DefaultTemporalInterpreter {
 
-  public static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
 
   //Todo GBIF decides if two assertions are moved to OccurenceIssues
@@ -60,10 +52,11 @@ public class DefaultTemporalInterpreter {
 
   /**
    * Uses default ISO date parser
+   *
    * @return
    */
-  public static DefaultTemporalInterpreter getInstance(){
-      return new DefaultTemporalInterpreter();
+  public static DefaultTemporalInterpreter getInstance() {
+    return new DefaultTemporalInterpreter();
   }
 
   /**
@@ -72,18 +65,17 @@ public class DefaultTemporalInterpreter {
    * @param parser
    * @return
    */
-  public static DefaultTemporalInterpreter getInstance(TemporalParser parser){
+  public static DefaultTemporalInterpreter getInstance(TemporalParser parser) {
     return new DefaultTemporalInterpreter(parser);
   }
 
   /**
-   * Given possibly both of year, month, day and a dateString, produces a single date.
-   * When year, month and day are all populated and parseable they are given priority,
-   * but if any field is missing or illegal and dateString is parseable dateString is preferred.
-   * Partially valid dates are not supported and null will be returned instead. The only exception is the year alone
-   * which will be used as the last resort if nothing else works.
-   * Years are verified to be before or next year and after 1600.
-   * x
+   * Given possibly both of year, month, day and a dateString, produces a single date. When year,
+   * month and day are all populated and parseable they are given priority, but if any field is
+   * missing or illegal and dateString is parseable dateString is preferred. Partially valid dates
+   * are not supported and null will be returned instead. The only exception is the year alone which
+   * will be used as the last resort if nothing else works. Years are verified to be before or next
+   * year and after 1600. x
    *
    * @return interpretation result, never null
    */
@@ -92,10 +84,13 @@ public class DefaultTemporalInterpreter {
     if (eventResult.isSuccessful()) {
       TemporalAccessor temporalAccessor = eventResult.getPayload();
 
-      //Get eventDate as java.util.Date and ignore the offset (timezone) if provided
-      //Note for debug: be careful if you inspect the content of 'eventDate' it will contain your machine timezone.
-      LocalDateTime eventDate = TemporalAccessorUtils.toEarliestLocalDateTime(temporalAccessor, true);
-      AtomizedLocalDate atomizedLocalDate = AtomizedLocalDate.fromTemporalAccessor(temporalAccessor);
+      // Get eventDate as java.util.Date and ignore the offset (timezone) if provided
+      // Note for debug: be careful if you inspect the content of 'eventDate' it will contain your
+      // machine timezone.
+      LocalDateTime eventDate =
+          TemporalAccessorUtils.toEarliestLocalDateTime(temporalAccessor, true);
+      AtomizedLocalDate atomizedLocalDate =
+          AtomizedLocalDate.fromTemporalAccessor(temporalAccessor);
 
       Optional.ofNullable(eventDate)
           .map(LocalDateTime::toString)
@@ -114,10 +109,14 @@ public class DefaultTemporalInterpreter {
     LocalDate upperBound = LocalDate.now().plusDays(1);
     if (hasValue(er, DcTerm.modified)) {
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
-      OccurrenceParseResult<TemporalAccessor> parsed = interpretLocalDate(extractValue(er, DcTerm.modified),
-          validModifiedDateRange, OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
+      OccurrenceParseResult<TemporalAccessor> parsed =
+          interpretLocalDate(
+              extractValue(er, DcTerm.modified),
+              validModifiedDateRange,
+              OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
-        Optional.ofNullable(TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
+        Optional.ofNullable(
+                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
             .map(LocalDateTime::toString)
             .ifPresent(tr::setModified);
       }
@@ -128,13 +127,16 @@ public class DefaultTemporalInterpreter {
     if (hasValue(er, DwcTerm.dateIdentified)) {
       Range<LocalDate> validRecordedDateRange = Range.closed(MIN_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
-          interpretLocalDate(extractValue(er, DwcTerm.dateIdentified),
-              validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+          interpretLocalDate(
+              extractValue(er, DwcTerm.dateIdentified),
+              validRecordedDateRange,
+              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
-        Optional.ofNullable(TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
+        Optional.ofNullable(
+                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
             .map(LocalDateTime::toString)
             .ifPresent(tr::setDateIdentified);
-        if(parsed.getConfidence() == CONFIDENCE.POSSIBLE){
+        if (parsed.getConfidence() == CONFIDENCE.POSSIBLE) {
           tr.getIssues().getIssueList().add(IDENTIFIED_DATE_AMBIGUOUS);
         }
       }
@@ -143,13 +145,13 @@ public class DefaultTemporalInterpreter {
   }
 
   /**
-   * A convenience method that calls interpretRecordedDate with the verbatim recordedDate values from the
-   * VerbatimOccurrence.
+   * A convenience method that calls interpretRecordedDate with the verbatim recordedDate values
+   * from the VerbatimOccurrence.
    *
    * @param er the VerbatimOccurrence containing a recordedDate
    * @return the interpretation result which is never null
    */
-  public  OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(ExtendedRecord er) {
+  public OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(ExtendedRecord er) {
     final String year = extractValue(er, DwcTerm.year);
     final String month = extractValue(er, DwcTerm.month);
     final String day = extractValue(er, DwcTerm.day);
@@ -159,13 +161,12 @@ public class DefaultTemporalInterpreter {
   }
 
   /**
-   * Given possibly both of year, month, day and a dateString, produces a single date.
-   * When year, month and day are all populated and parseable they are given priority,
-   * but if any field is missing or illegal and dateString is parseable dateString is preferred.
-   * Partially valid dates are not supported and null will be returned instead. The only exception is the year alone
-   * which will be used as the last resort if nothing else works.
-   * Years are verified to be before or next year and after 1600.
-   * x
+   * Given possibly both of year, month, day and a dateString, produces a single date. When year,
+   * month and day are all populated and parseable they are given priority, but if any field is
+   * missing or illegal and dateString is parseable dateString is preferred. Partially valid dates
+   * are not supported and null will be returned instead. The only exception is the year alone which
+   * will be used as the last resort if nothing else works. Years are verified to be before or next
+   * year and after 1600. x
    *
    * @return interpretation result, never null
    */
