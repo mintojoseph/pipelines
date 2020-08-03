@@ -4,20 +4,16 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>examples</artifactId>
-    <version>2.5.6-SNAPSHOT</version>
+    <artifactId>pipelines</artifactId>
+    <version>2.5.5-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>examples-metrics</artifactId>
+  <artifactId>ingest-gbif-standalone</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Examples :: Metrics</name>
-  <description>The example demonstrates how to send Apache Beam SparkRunner metrics to ELK</description>
-
-  <properties>
-    <sonar.skip>true</sonar.skip>
-  </properties>
+  <name>Pipelines :: Pipelines :: Ingest-GBIF Standalone</name>
+  <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
 
   <build>
     <plugins>
@@ -50,11 +46,29 @@
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.gbif.pipelines.examples.MetricsPipeline</mainClass>
+                  <mainClass>org.gbif.pipelines.standalone.DwcaPipeline</mainClass>
                 </transformer>
               </transformers>
               <relocations>
-                <!-- To avoid guava problem in Spark cluster mode -->
+                <!-- Transient from core: conflicts with Beam on Spark -->
+                <relocation>
+                  <pattern>okio</pattern>
+                  <shadedPattern>o113.okio</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>retrofit2</pattern>
+                  <shadedPattern>r240.retrofit2</shadedPattern>
+                </relocation>
+                <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
+                <relocation>
+                  <pattern>org.apache.http</pattern>
+                  <shadedPattern>hc45.org.apache.http</shadedPattern>
+                </relocation>
+                <!-- Transient from core: conflicts with Hadoop on Spark -->
+                <relocation>
+                  <pattern>org.hsqldb</pattern>
+                  <shadedPattern>h228.org.hsqldb</shadedPattern>
+                </relocation>
                 <relocation>
                   <pattern>com.google.common</pattern>
                   <shadedPattern>g20.com.google.common</shadedPattern>
@@ -70,17 +84,20 @@
   <dependencies>
 
     <!-- This project -->
-    <!-- Dependency to custom Beam Slf4J sink -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
-    <!-- Dependency to custom Beam Options -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-beam</artifactId>
+      <artifactId>ingest-gbif</artifactId>
       <exclusions>
-        <!-- Excluded to avoid problem with Spark standalone mode and Log4j logger -->
         <exclusion>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
@@ -99,6 +116,21 @@
     </dependency>
 
     <!-- Hadoop -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-all</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
@@ -124,6 +156,24 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-streaming_2.11</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-scala_2.11</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.jpountz.lz4</groupId>
+      <artifactId>lz4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
     </dependency>
 
     <!-- Logging -->
@@ -131,7 +181,10 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <!-- GELF adapter for Spark to send logs to ELK -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
     <dependency>
       <groupId>biz.paluch.logging</groupId>
       <artifactId>logstash-gelf</artifactId>

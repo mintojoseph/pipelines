@@ -3,20 +3,20 @@
  */
 [
     {
-     "name":"GadmFeatures",
-     "namespace":"org.gbif.pipelines.io.avro",
-     "type":"record",
-     "doc":"Models a set of GADM features at different levels.",
-     "fields":[
-        {"name": "level0Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level0Gid"},
-        {"name": "level1Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level1Gid"},
-        {"name": "level2Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level2Gid"},
-        {"name": "level3Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level3Gid"},
-        {"name": "level0Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level0Name"},
-        {"name": "level1Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
-        {"name": "level2Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
-        {"name": "level3Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"}
-     ]
+        "name":"GadmFeatures",
+        "namespace":"org.gbif.pipelines.io.avro",
+        "type":"record",
+        "doc": "Models a set of GADM features at different levels.",
+        "fields":[
+            {"name": "level0Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level0Gid"},
+            {"name": "level1Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level1Gid"},
+            {"name": "level2Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level2Gid"},
+            {"name": "level3Gid", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level3Gid"},
+            {"name": "level0Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level0Name"},
+            {"name": "level1Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
+            {"name": "level2Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
+            {"name": "level3Name", "type": ["null", "string"], "default" : null, "doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"}
+        ]
     },
     {
       "name":"LocationRecord",
@@ -51,7 +51,7 @@
         {"name": "hasGeospatialIssue","type":["null","boolean"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/hasGeospatialIssues"},
         {"name": "locality","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/locality"},
         {"name": "georeferencedDate", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
-        {"name": "gadm", "type": ["null", "GadmFeatures"], "default" : null, "doc": "http://rs.gbif.org/terms/gadm/3.0"},
+        {"name": "gadm", "type": ["null", "GadmFeatures"], "default" : null, "doc": "http://rs.gbif.org/terms/gadm/3.0/"},
         {"name": "issues", "type": "IssueRecord", "default":{}}
       ]
     }

@@ -142,7 +142,7 @@ public class OccurrenceHdfsRecordConverter {
    */
   private static BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase> locationMapper() {
     return (hr, sr) -> {
-      LocationRecord lr = (LocationRecord)sr;
+      LocationRecord lr = (LocationRecord) sr;
       hr.setCountrycode(lr.getCountryCode());
       hr.setContinent(lr.getContinent());
       hr.setDecimallatitude(lr.getDecimalLatitude());

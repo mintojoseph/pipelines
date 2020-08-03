@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>sdks</artifactId>
+    <groupId>org.gbif.pipelines</groupId>
+    <version>2.5.5-SNAPSHOT</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.gbif.pipelines</groupId>
-    <artifactId>sdks</artifactId>
-    <version>2.5.6-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
-  </parent>
-
-  <artifactId>core</artifactId>
+  <artifactId>parsers</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Sdks :: Core</name>
-  <description>Main module contains API like classes, such as data interpretations, converters, DwCA reader and etc.
-  </description>
+  <name>Pipelines :: Sdks :: Parsers</name>
+  <description>Data parsers and converters, mainly for internal usage inside of interpretations</description>
 
   <dependencies>
 
-    <!-- Tools -->
+    <!-- Dev tools -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -28,26 +24,10 @@
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>variables</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>parsers</artifactId>
     </dependency>
 
     <!-- GBIF -->
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwca-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>dwc-api</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
@@ -58,11 +38,7 @@
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
-      <artifactId>gbif-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>keygen</artifactId>
+      <artifactId>dwc-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>
@@ -128,36 +104,14 @@
       <groupId>com.squareup.okio</groupId>
       <artifactId>okio</artifactId>
     </dependency>
+
+    <!-- Fault tolerance - Used for API service calls-->
     <dependency>
       <groupId>io.github.resilience4j</groupId>
       <artifactId>resilience4j-retry</artifactId>
     </dependency>
 
-    <!-- HDFS Table -->
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-hdfs-table</artifactId>
-    </dependency>
-
-    <!-- Common -->
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-    </dependency>
-
-    <!-- Jackson -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-avro</artifactId>
-    </dependency>
+    <!-- Json -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
@@ -177,6 +131,15 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
+    <!-- ES -->
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
+    </dependency>
 
     <!-- Test -->
     <dependency>
@@ -191,7 +154,6 @@
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
     </dependency>
-
   </dependencies>
 
 </project>

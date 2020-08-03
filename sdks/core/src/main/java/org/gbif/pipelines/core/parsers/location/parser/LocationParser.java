@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers.location.parser;
+package org.gbif.pipelines.parsers.parsers.location.parser;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -12,9 +12,9 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.core.parsers.VocabularyParser;
-import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.utils.ModelUtils;
+import org.gbif.pipelines.parsers.parsers.VocabularyParser;
+import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.AccessLevel;
@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /**
  * Parses the location fields.
