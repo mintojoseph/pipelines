@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.location.parser;
+package org.gbif.pipelines.core.parsers.location.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +13,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
