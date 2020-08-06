@@ -7,7 +7,7 @@ import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
 import org.slf4j.MDC;
 

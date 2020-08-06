@@ -2,7 +2,7 @@ package org.gbif.pipelines.core.ws.blast;
 
 import java.util.concurrent.TimeUnit;
 
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;

@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnection;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
 import org.apache.hadoop.hbase.client.Connection;

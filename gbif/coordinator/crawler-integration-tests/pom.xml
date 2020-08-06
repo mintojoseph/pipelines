@@ -3,7 +3,7 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>cli</artifactId>
+    <artifactId>coordinator</artifactId>
     <version>2.5.7-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>

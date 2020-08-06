@@ -18,10 +18,10 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
+import org.gbif.pipelines.core.ws.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.metadata.response.Network;
+import org.gbif.pipelines.core.ws.metadata.response.Organization;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;

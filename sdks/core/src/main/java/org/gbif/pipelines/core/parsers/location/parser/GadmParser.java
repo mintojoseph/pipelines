@@ -25,6 +25,7 @@ public class GadmParser {
 
     // Use these to retrieve the GADM areas.
     // Check parameters
+    Objects.requireNonNull(latLng);
     if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
       throw new IllegalArgumentException("Empty coordinates");
     }
@@ -37,40 +38,41 @@ public class GadmParser {
       LatLng latLng, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = kvStore.get(latLng);
+
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         GadmFeatures gf = GadmFeatures.newBuilder().build();
-        geocodeResponse.getLocations().forEach(l -> acceptGadm(l, gf));
+        geocodeResponse.getLocations().forEach(l -> accept(l, gf));
         return Optional.of(gf);
       }
     }
     return Optional.empty();
   }
 
-  private static void acceptGadm(Location l, GadmFeatures g) {
-    if (l.getType() != null) {
+  public static void accept(Location l, GadmFeatures gf) {
+    if (l.getType() != null && l.getDistance() != null && l.getDistance() == 0) {
       switch (l.getType()) {
         case "GADM0":
-          if (g.getLevel0Gid() == null) {
-            g.setLevel0Gid(l.getId());
-            g.setLevel0Name(l.getName());
+          if (gf.getLevel0Gid() == null) {
+            gf.setLevel0Gid(l.getId());
+            gf.setLevel0Name(l.getName());
           }
           return;
         case "GADM1":
-          if (g.getLevel1Gid() == null) {
-            g.setLevel1Gid(l.getId());
-            g.setLevel1Name(l.getName());
+          if (gf.getLevel1Gid() == null) {
+            gf.setLevel1Gid(l.getId());
+            gf.setLevel1Name(l.getName());
           }
           return;
         case "GADM2":
-          if (g.getLevel2Gid() == null) {
-            g.setLevel2Gid(l.getId());
-            g.setLevel2Name(l.getName());
+          if (gf.getLevel2Gid() == null) {
+            gf.setLevel2Gid(l.getId());
+            gf.setLevel2Name(l.getName());
           }
           return;
         case "GADM3":
-          if (g.getLevel3Gid() == null) {
-            g.setLevel3Gid(l.getId());
-            g.setLevel3Name(l.getName());
+          if (gf.getLevel3Gid() == null) {
+            gf.setLevel3Gid(l.getId());
+            gf.setLevel3Name(l.getName());
           }
           return;
         default:

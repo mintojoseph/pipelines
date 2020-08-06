@@ -5,7 +5,7 @@ import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.ReadOnlyHBaseStore;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
 import org.apache.hadoop.hbase.util.Bytes;

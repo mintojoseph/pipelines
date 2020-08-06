@@ -18,12 +18,12 @@ import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
 
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 

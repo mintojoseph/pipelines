@@ -3,10 +3,10 @@ package org.gbif.pipelines.core.ws.blast;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.gbif.pipelines.parsers.config.factory.RetryFactory;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.parsers.ws.client.blast.request.Sequence;
-import org.gbif.pipelines.parsers.ws.client.blast.response.Blast;
+import org.gbif.pipelines.core.config.factory.RetryFactory;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.ws.blast.request.Sequence;
+import org.gbif.pipelines.core.ws.blast.response.Blast;
 
 import io.github.resilience4j.retry.Retry;
 import javax.xml.ws.WebServiceException;

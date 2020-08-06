@@ -2,12 +2,12 @@ package org.gbif.pipelines.core.config.factory;
 
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.parsers.config.model.ContentConfig;
-import org.gbif.pipelines.parsers.config.model.KeygenConfig;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.parsers.config.model.LockConfig;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.core.config.model.ContentConfig;
+import org.gbif.pipelines.core.config.model.KeygenConfig;
+import org.gbif.pipelines.core.config.model.KvConfig;
+import org.gbif.pipelines.core.config.model.LockConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 
 import org.junit.Test;
 

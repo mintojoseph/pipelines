@@ -10,10 +10,10 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>cli</artifactId>
+  <artifactId>coordinator</artifactId>
   <packaging>pom</packaging>
 
-  <name>Pipelines :: GBIF :: CLI</name>
+  <name>Pipelines :: GBIF :: Coordinator</name>
 
   <modules>
     <module>crawler</module>

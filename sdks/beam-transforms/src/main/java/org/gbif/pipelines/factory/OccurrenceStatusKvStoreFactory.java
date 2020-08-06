@@ -4,7 +4,7 @@ import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.common.parsers.OccurrenceStatusParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
 import lombok.NoArgsConstructor;

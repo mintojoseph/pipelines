@@ -8,7 +8,7 @@ import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;

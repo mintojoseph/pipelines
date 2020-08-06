@@ -8,7 +8,7 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
 import org.apache.curator.test.TestingServer;
 import org.junit.rules.ExternalResource;

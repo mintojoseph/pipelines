@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
 import lombok.Builder;

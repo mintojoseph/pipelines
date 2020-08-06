@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.ws.blast;
 
-import org.gbif.pipelines.parsers.ws.client.blast.request.Sequence;
-import org.gbif.pipelines.parsers.ws.client.blast.response.Blast;
+import org.gbif.pipelines.core.ws.blast.request.Sequence;
+import org.gbif.pipelines.core.ws.blast.response.Blast;
 
 import retrofit2.Call;
 import retrofit2.http.Body;

@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Programme;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
+import org.gbif.pipelines.core.ws.metadata.response.Programme;
+import org.gbif.pipelines.core.ws.metadata.response.Project;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;

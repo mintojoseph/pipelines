@@ -9,8 +9,8 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
+import org.gbif.pipelines.core.ws.metadata.response.Dataset;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
 import org.apache.beam.sdk.transforms.DoFn;

@@ -2,7 +2,7 @@ package org.gbif.pipelines.core.config.factory;
 
 import java.util.Objects;
 
-import org.gbif.pipelines.parsers.config.model.RetryConfig;
+import org.gbif.pipelines.core.config.model.RetryConfig;
 
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;

@@ -5,15 +5,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.gbif.pipelines.parsers.config.factory.RetryFactory;
-import org.gbif.pipelines.parsers.config.model.ContentConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
-import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentService;
-import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentServiceFactory;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
+import org.gbif.pipelines.core.config.factory.RetryFactory;
+import org.gbif.pipelines.core.config.model.ContentConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
+import org.gbif.pipelines.core.ws.metadata.contentful.ContentService;
+import org.gbif.pipelines.core.ws.metadata.contentful.ContentServiceFactory;
+import org.gbif.pipelines.core.ws.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.metadata.response.Network;
+import org.gbif.pipelines.core.ws.metadata.response.Organization;
+import org.gbif.pipelines.core.ws.metadata.response.Project;
 
 import io.github.resilience4j.retry.Retry;
 import javax.xml.ws.WebServiceException;

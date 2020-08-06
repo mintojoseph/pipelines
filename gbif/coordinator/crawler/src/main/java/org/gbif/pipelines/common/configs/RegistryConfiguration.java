@@ -4,14 +4,14 @@ import java.util.Properties;
 
 import org.gbif.cli.ConfigUtils;
 import org.gbif.cli.PropertyName;
-import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
-import org.gbif.ws.client.guice.SingleUserAuthModule;
 
 import com.beust.jcommander.Parameter;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
+import org.gbif.ws.client.guice.SingleUserAuthModule;
 
 /**
  * A configuration class which can be used to get all the details needed to create a writable connection to the

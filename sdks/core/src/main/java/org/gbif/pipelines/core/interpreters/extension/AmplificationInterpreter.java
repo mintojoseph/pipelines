@@ -11,9 +11,9 @@ import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
-import org.gbif.pipelines.parsers.ws.client.blast.request.Sequence;
-import org.gbif.pipelines.parsers.ws.client.blast.response.Blast;
+import org.gbif.pipelines.core.ws.blast.BlastServiceClient;
+import org.gbif.pipelines.core.ws.blast.request.Sequence;
+import org.gbif.pipelines.core.ws.blast.response.Blast;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
