@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
 import org.gbif.pipelines.io.avro.Nomenclature;
@@ -13,9 +14,6 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.rest.client.species.NameUsageMatch;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 /** Adapts a {@link NameUsageMatch} into a {@link TaxonRecord} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -33,9 +31,7 @@ public class TaxonRecordConverter {
   private static TaxonRecord convertInternal(NameUsageMatch source, TaxonRecord taxonRecord) {
 
     List<RankedName> classifications =
-        source
-            .getClassification()
-            .stream()
+        source.getClassification().stream()
             .map(TaxonRecordConverter::convertRankedName)
             .collect(Collectors.toList());
 
@@ -43,8 +39,9 @@ public class TaxonRecordConverter {
     taxonRecord.setSynonym(source.isSynonym());
     taxonRecord.setUsage(convertRankedName(source.getUsage()));
     // Usage is set as the accepted usage if the accepted usage is null
-    taxonRecord.setAcceptedUsage(Optional.ofNullable(convertRankedName(source.getAcceptedUsage()))
-                                  .orElse(taxonRecord.getUsage()));
+    taxonRecord.setAcceptedUsage(
+        Optional.ofNullable(convertRankedName(source.getAcceptedUsage()))
+            .orElse(taxonRecord.getUsage()));
     taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
@@ -81,9 +78,7 @@ public class TaxonRecordConverter {
 
     // alternatives
     List<TaxonRecord> alternatives =
-        diagnosticsApi
-            .getAlternatives()
-            .stream()
+        diagnosticsApi.getAlternatives().stream()
             .map(match -> convertInternal(match, TaxonRecord.newBuilder().build()))
             .collect(Collectors.toList());
 

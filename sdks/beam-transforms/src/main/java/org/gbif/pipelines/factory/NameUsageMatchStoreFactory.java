@@ -1,5 +1,6 @@
 package org.gbif.pipelines.factory;
 
+import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
@@ -9,8 +10,6 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
-
-import lombok.SneakyThrows;
 
 /** Factory to get singleton instance of KV store {@link KeyValueStore} */
 public class NameUsageMatchStoreFactory {

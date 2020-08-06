@@ -3,31 +3,28 @@ package org.gbif.pipelines.ingest.utils;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
-
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.metrics.MetricQueryResults;
 import org.apache.beam.sdk.metrics.MetricResult;
 import org.apache.beam.sdk.metrics.MetricResults;
 import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.hadoop.fs.FileSystem;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 /**
- * Class to work with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml string format
+ * Class to work with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a
+ * yaml string format
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetricsHandler {
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml string
-   * format
-   * SparkRunner doesn't support committed
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
+   * a yaml string format SparkRunner doesn't support committed
    */
   public static String getCountersInfo(MetricResults results) {
 
@@ -37,10 +34,13 @@ public class MetricsHandler {
         mr -> mr.getName().getName() + "Attempted: " + mr.getAttempted() + "\n";
 
     StringBuilder builder = new StringBuilder();
-    queryResults.getCounters().forEach(x -> {
-      String line = convert.apply(x);
-      builder.append(line);
-    });
+    queryResults
+        .getCounters()
+        .forEach(
+            x -> {
+              String line = convert.apply(x);
+              builder.append(line);
+            });
 
     String result = builder.toString();
     log.info("Added pipeline metadata - {}", result.replace("\n", ", "));
@@ -70,18 +70,20 @@ public class MetricsHandler {
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
-   * save it
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
+   * a yaml file and save it
    */
-  public static void saveCountersToInputPathFile(BasePipelineOptions options, MetricResults results) {
+  public static void saveCountersToInputPathFile(
+      BasePipelineOptions options, MetricResults results) {
     saveCountersToFile(options, results, true);
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
-   * save it
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
+   * a yaml file and save it
    */
-  public static void saveCountersToTargetPathFile(BasePipelineOptions options, MetricResults results) {
+  public static void saveCountersToTargetPathFile(
+      BasePipelineOptions options, MetricResults results) {
     saveCountersToFile(options, results, false);
   }
 

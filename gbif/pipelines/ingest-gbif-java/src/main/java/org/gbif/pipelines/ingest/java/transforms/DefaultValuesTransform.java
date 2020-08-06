@@ -2,13 +2,11 @@ package org.gbif.pipelines.ingest.java.transforms;
 
 import java.util.List;
 import java.util.Map;
-
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
-import org.gbif.pipelines.transforms.SerializableSupplier;
-
 import lombok.Builder;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 
 /**
  * Java transformations to use verbatim default term values defined as MachineTags in an

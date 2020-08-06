@@ -1,26 +1,23 @@
 package org.gbif.pipelines.crawler.indexing;
 
+import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.gbif.api.service.registry.DatasetService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-
-import com.google.common.util.concurrent.AbstractIdleService;
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * A service which listens to the  {@link org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage }
+ * A service which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage }
  */
 @Slf4j
 public class IndexingService extends AbstractIdleService {
@@ -44,17 +41,21 @@ public class IndexingService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
-    httpClient = HttpClients.custom()
-        .setDefaultRequestConfig(RequestConfig.custom()
-            .setConnectTimeout(60_000)
-            .setSocketTimeout(60_000)
-            .build())
-        .build();
-    
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    executor =
+        config.standaloneNumberThreads == null
+            ? null
+            : Executors.newFixedThreadPool(config.standaloneNumberThreads);
+    httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
 
-    IndexingCallback callback = new IndexingCallback(config, publisher, curator, httpClient, client, executor);
+    PipelinesHistoryWsClient client =
+        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+
+    IndexingCallback callback =
+        new IndexingCallback(config, publisher, curator, httpClient, client, executor);
     listener.listen(c.queueName, c.poolSize, callback);
   }
 

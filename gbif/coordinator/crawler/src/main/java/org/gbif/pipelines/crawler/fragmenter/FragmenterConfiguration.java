@@ -1,28 +1,21 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
-import java.util.Set;
-
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
-/**
- * Configuration required to start raw fragments processing
- */
+/** Configuration required to start raw fragments processing */
 @ToString
 public class FragmenterConfiguration implements BaseConfiguration {
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
-  public StepConfiguration stepConfig = new StepConfiguration();
+  @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 
   @Parameter(names = "--number-threads")
   @Valid
@@ -83,5 +76,4 @@ public class FragmenterConfiguration implements BaseConfiguration {
   public String getMetaFileName() {
     return metaFileName;
   }
-
 }

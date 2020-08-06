@@ -1,5 +1,12 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
+import static org.gbif.pipelines.ingest.utils.FsUtils.buildFilePathHdfsViewUsingInputPath;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +37,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
-
-import java.util.Collections;
-import java.util.Set;
-import java.util.function.UnaryOperator;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
-import static org.gbif.pipelines.ingest.utils.FsUtils.buildFilePathHdfsViewUsingInputPath;
 
 /**
  * Pipeline sequence:
@@ -99,11 +98,13 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.HDFS_VIEW.name());
 
-    //Deletes the target path if it exists
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, types);
+    // Deletes the target path if it exists
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, types);
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> interpretPathFn = t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> interpretPathFn =
+        t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 
@@ -132,8 +133,10 @@ public class InterpretedToHdfsViewPipeline {
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
-      p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(interpretPathFn))
-        .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
+        p.apply(
+                "Interpret TaggedValueRecords/MachinesTags interpretation",
+                taggedValuesTransform.read(interpretPathFn))
+            .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(interpretPathFn))
@@ -210,10 +213,9 @@ public class InterpretedToHdfsViewPipeline {
       SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
     }
 
-    //Metrics
+    // Metrics
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }
-
 }

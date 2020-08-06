@@ -1,7 +1,13 @@
 package org.gbif.pipelines.crawler.balancer.handler;
 
-import java.io.IOException;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -14,33 +20,25 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.balancer.BalancerConfiguration;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-
 /**
- * Populates and sends the {@link PipelinesVerbatimMessage} message, the main method
- * is {@link VerbatimMessageHandler#handle}
+ * Populates and sends the {@link PipelinesVerbatimMessage} message, the main method is {@link
+ * VerbatimMessageHandler#handle}
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimMessageHandler {
 
-  /**
-   * Main handler, basically computes the runner type and sends to the same consumer
-   */
-  public static void handle(BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
+  /** Main handler, basically computes the runner type and sends to the same consumer */
+  public static void handle(
+      BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
     log.info("Process PipelinesVerbatimMessage - {}", message);
 
     // Populate message fields
     ObjectMapper mapper = new ObjectMapper();
-    PipelinesVerbatimMessage m = mapper.readValue(message.getPayload(), PipelinesVerbatimMessage.class);
+    PipelinesVerbatimMessage m =
+        mapper.readValue(message.getPayload(), PipelinesVerbatimMessage.class);
 
     if (m.getAttempt() == null) {
       Integer attempt = getLatestAttempt(config, m);
@@ -67,8 +65,7 @@ public class VerbatimMessageHandler {
             m.getExtraPath(),
             result,
             m.getResetPrefix(),
-            m.getExecutionId()
-        );
+            m.getExecutionId());
 
     publisher.send(outputMessage);
 
@@ -76,19 +73,20 @@ public class VerbatimMessageHandler {
   }
 
   /**
-   * Computes runner type:
-   * Strategy 1 - Chooses a runner type by number of records in a dataset
+   * Computes runner type: Strategy 1 - Chooses a runner type by number of records in a dataset
    * Strategy 2 - Chooses a runner type by calculating verbatim.avro file size
    */
-  private static StepRunner computeRunner(BalancerConfiguration config, PipelinesVerbatimMessage message,
-      long recordsNumber) throws IOException {
+  private static StepRunner computeRunner(
+      BalancerConfiguration config, PipelinesVerbatimMessage message, long recordsNumber)
+      throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = String.valueOf(message.getAttempt());
 
     StepRunner runner;
 
-    if (message.getInterpretTypes().size() == 1 && message.getInterpretTypes().contains(METADATA.name())) {
+    if (message.getInterpretTypes().size() == 1
+        && message.getInterpretTypes().contains(METADATA.name())) {
       runner = StepRunner.STANDALONE;
       log.info("Interpret type is METADATA only, Spark Runner type - {}", runner);
       return runner;
@@ -96,7 +94,10 @@ public class VerbatimMessageHandler {
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
-      runner = recordsNumber >= config.switchRecordsNumber ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
+      runner =
+          recordsNumber >= config.switchRecordsNumber
+              ? StepRunner.DISTRIBUTED
+              : StepRunner.STANDALONE;
       log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
       return runner;
     }
@@ -104,7 +105,8 @@ public class VerbatimMessageHandler {
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     String verbatimPath = String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
-    long fileSizeByte = HdfsUtils.getFileSizeByte(config.hdfsSiteConfig, config.coreSiteConfig, verbatimPath);
+    long fileSizeByte =
+        HdfsUtils.getFileSizeByte(config.hdfsSiteConfig, config.coreSiteConfig, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -115,11 +117,9 @@ public class VerbatimMessageHandler {
     throw new IllegalStateException("Runner computation is failed " + datasetId);
   }
 
-  /**
-   * Reads number of records from a archive-to-avro metadata file
-   */
-  private static long getRecordNumber(BalancerConfiguration config, PipelinesVerbatimMessage message)
-      throws IOException {
+  /** Reads number of records from a archive-to-avro metadata file */
+  private static long getRecordNumber(
+      BalancerConfiguration config, PipelinesVerbatimMessage message) throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
@@ -128,8 +128,10 @@ public class VerbatimMessageHandler {
     log.info("Getting records number from the file - {}", metaPath);
 
     Long messageNumber =
-        message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
-            ? message.getValidationResult().getNumberOfRecords() : null;
+        message.getValidationResult() != null
+                && message.getValidationResult().getNumberOfRecords() != null
+            ? message.getValidationResult().getNumberOfRecords()
+            : null;
     String fileNumber =
         HdfsUtils.getValueByKey(
             config.hdfsSiteConfig, config.coreSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
@@ -150,21 +152,18 @@ public class VerbatimMessageHandler {
     return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
   }
 
-  /**
-   * Finds the latest attempt number in HDFS
-   */
+  /** Finds the latest attempt number in HDFS */
   @SneakyThrows
-  private static Integer getLatestAttempt(BalancerConfiguration config, PipelinesVerbatimMessage message) {
+  private static Integer getLatestAttempt(
+      BalancerConfiguration config, PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
     String path = String.join("/", config.repositoryPath, datasetId);
     log.info("Parsing HDFS directory - {}", path);
-    return HdfsUtils.getSubDirList(config.hdfsSiteConfig, config.coreSiteConfig, path)
-        .stream()
+    return HdfsUtils.getSubDirList(config.hdfsSiteConfig, config.coreSiteConfig, path).stream()
         .map(y -> y.getPath().getName())
         .filter(x -> x.chars().allMatch(Character::isDigit))
         .mapToInt(Integer::valueOf)
         .max()
         .orElseThrow(() -> new IllegalStateException("Can't find the maximum attempt"));
   }
-
 }

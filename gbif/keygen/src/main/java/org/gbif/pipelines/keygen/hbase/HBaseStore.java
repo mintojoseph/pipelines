@@ -1,10 +1,11 @@
 package org.gbif.pipelines.keygen.hbase;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-
-import org.gbif.api.exception.ServiceUnavailableException;
-import org.gbif.hbase.util.ResultReader;
-
+import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Delete;
@@ -16,12 +17,8 @@ import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-
-import com.google.common.annotations.VisibleForTesting;
-import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.gbif.api.exception.ServiceUnavailableException;
+import org.gbif.hbase.util.ResultReader;
 
 /**
  * A convenience class that wraps an HBase table and provides typed get and put operations.
@@ -50,7 +47,7 @@ public class HBaseStore<T> {
     this.cfBytes = Bytes.toBytes(cf);
     this.connection = checkNotNull(connection, "connection can't be null");
     if (numberOfBuckets != null) {
-      checkArgument(numberOfBuckets>0, "bucket count must be >0");
+      checkArgument(numberOfBuckets > 0, "bucket count must be >0");
       this.numberOfBuckets = numberOfBuckets;
       this.salted = true;
     } else {
@@ -68,6 +65,7 @@ public class HBaseStore<T> {
     Result row = getRow(key, columnName);
     return ResultReader.getString(row, cf, columnName, null);
   }
+
   public void putLong(T key, String columnName, long value) {
     put(key, columnName, Bytes.toBytes(value));
   }
@@ -109,7 +107,8 @@ public class HBaseStore<T> {
     }
   }
 
-  public void putLongString(T key, String columnName, long value, String columnName2, String value2) {
+  public void putLongString(
+      T key, String columnName, long value, String columnName2, String value2) {
     checkNotNull(key, KEY_CANT_BE_NULL_MSG);
     try (Table table = connection.getTable(tableName)) {
       byte[] byteKey = convertKey(key);
@@ -130,7 +129,6 @@ public class HBaseStore<T> {
    * @param key the primary key of the requested row
    * @param columnName the column value to return
    * @return HBase Result
-   *
    * @throws ServiceUnavailableException if there are errors when communicating with HBase
    */
   public Result getRow(T key, String columnName) {
@@ -157,7 +155,6 @@ public class HBaseStore<T> {
    *
    * @param key the primary key of the requested row
    * @return HBase Result
-   *
    * @throws ServiceUnavailableException if there are errors when communicating with HBase
    */
   @Nullable
@@ -179,7 +176,8 @@ public class HBaseStore<T> {
   }
 
   /**
-   * Do an HBase checkAndPut - a put that will only be attempted if the checkColumn contains the expected checkValue.
+   * Do an HBase checkAndPut - a put that will only be attempted if the checkColumn contains the
+   * expected checkValue.
    *
    * @param key the primary key of the row
    * @param putColumn the column where the new value will be stored
@@ -188,11 +186,15 @@ public class HBaseStore<T> {
    * @param checkValue the expected value of the checkColumn
    * @param ts the timestamp to write on the put (if null, the current timestamp will be used)
    * @return true if condition was met and put was successful, false otherwise
-   *
    * @throws ServiceUnavailableException if there are errors when communicating with HBase
    */
-  public boolean checkAndPut(T key, String putColumn, byte[] putValue, String checkColumn, @Nullable byte[] checkValue,
-                             @Nullable Long ts) {
+  public boolean checkAndPut(
+      T key,
+      String putColumn,
+      byte[] putValue,
+      String checkColumn,
+      @Nullable byte[] checkValue,
+      @Nullable Long ts) {
     checkNotNull(key, KEY_CANT_BE_NULL_MSG);
     checkNotNull(putColumn, "putColumn can't be null");
     checkNotNull(putValue, "putValue can't be null");
@@ -258,6 +260,7 @@ public class HBaseStore<T> {
 
   /**
    * Returns the unsalted key using a modulus based approach.
+   *
    * @param unsalted Key to salt
    * @param numberOfBuckets To use in salting
    * @return The salted key
@@ -265,13 +268,15 @@ public class HBaseStore<T> {
   @VisibleForTesting
   public static byte[] saltKey(String unsalted, int numberOfBuckets) {
     int salt = Math.abs(unsalted.hashCode() % numberOfBuckets);
-    int digitCount = digitCount(numberOfBuckets-1);  // minus one because e.g. %100 produces 0..99 (2 digits)
-    String saltedKey = leftPadZeros(salt,digitCount) + ":" + unsalted;
+    int digitCount =
+        digitCount(numberOfBuckets - 1); // minus one because e.g. %100 produces 0..99 (2 digits)
+    String saltedKey = leftPadZeros(salt, digitCount) + ":" + unsalted;
     return Bytes.toBytes(saltedKey);
   }
 
   /**
    * Pads with 0s to desired length.
+   *
    * @param number To pad
    * @param length The final length needed
    * @return The string padded with 0 if needed
@@ -281,25 +286,24 @@ public class HBaseStore<T> {
   }
 
   /**
-   * Returns the number of digits in the number.  This will only provide sensible results for number>0 and the input
-   * is not sanitized.
+   * Returns the number of digits in the number. This will only provide sensible results for
+   * number>0 and the input is not sanitized.
    *
    * @return the number of digits in the number
    */
   private static int digitCount(int number) {
-    return (int)(Math.log10(number)+1);
+    return (int) (Math.log10(number) + 1);
   }
 
   /**
-   * Returns a row filter to enable scanning for occurrences of salted keys.
-   * E.g. passed a dataset UUID, this will allow a scan of the occurrence lookup table
+   * Returns a row filter to enable scanning for occurrences of salted keys. E.g. passed a dataset
+   * UUID, this will allow a scan of the occurrence lookup table
+   *
    * @param key Which is unsalted (e.g. a dataset UUID as a string)
    * @return The Row filter for scanning
    */
   public static RowFilter saltedRowFilter(String key) {
     return new RowFilter(
-        CompareFilter.CompareOp.EQUAL,
-        new RegexStringComparator("^[0-9]+:" + key + "\\|.+")
-    );
+        CompareFilter.CompareOp.EQUAL, new RegexStringComparator("^[0-9]+:" + key + "\\|.+"));
   }
 }

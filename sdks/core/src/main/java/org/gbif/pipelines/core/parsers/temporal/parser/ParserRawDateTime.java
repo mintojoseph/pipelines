@@ -1,15 +1,13 @@
 package org.gbif.pipelines.core.parsers.temporal.parser;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import java.time.temporal.ChronoField;
 import java.util.regex.Pattern;
-
-import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
+import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
 
 /**
  * Interpreter for raw date and time. The main method parse, fills year, month, day, hour, minute,
@@ -30,7 +28,8 @@ public class ParserRawDateTime {
    * @return ChronoAccumulator which store all parsed values
    */
   public static ChronoAccumulator parse(String rawDate, ChronoField lastParsed) {
-    if (isNullOrEmpty(rawDate) || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
+    if (isNullOrEmpty(rawDate)
+        || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
       return new ChronoAccumulator();
     }
 

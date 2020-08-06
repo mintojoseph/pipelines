@@ -1,18 +1,16 @@
 package org.gbif.pipelines.core.parsers.identifier;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class AgentIdentifierParserTest {
 
@@ -52,10 +50,12 @@ public class AgentIdentifierParserTest {
   @Test
   public void parseOrcidTest() {
     // Expected
-    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
-        .setType(AgentIdentifierType.ORCID.name())
-        .setValue("https://orcid.org/0000-0002-0144-1997")
-        .build());
+    Set<AgentIdentifier> expected =
+        Collections.singleton(
+            AgentIdentifier.newBuilder()
+                .setType(AgentIdentifierType.ORCID.name())
+                .setValue("https://orcid.org/0000-0002-0144-1997")
+                .build());
 
     // State
     String raw = "https://orcid.org/0000-0002-0144-1997";
@@ -71,10 +71,12 @@ public class AgentIdentifierParserTest {
   @Test
   public void parseOrcidWithoutSchemaTest() {
     // Expected
-    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
-        .setType(AgentIdentifierType.ORCID.name())
-        .setValue("https://orcid.org/0000-0002-0144-1997")
-        .build());
+    Set<AgentIdentifier> expected =
+        Collections.singleton(
+            AgentIdentifier.newBuilder()
+                .setType(AgentIdentifierType.ORCID.name())
+                .setValue("https://orcid.org/0000-0002-0144-1997")
+                .build());
 
     // State
     String raw = "0000-0002-0144-1997";
@@ -90,10 +92,12 @@ public class AgentIdentifierParserTest {
   @Test
   public void parseWikidataTest() {
     // Expected
-    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
-        .setType(AgentIdentifierType.WIKIDATA.name())
-        .setValue("https://www.wikidata.org/wiki/0000")
-        .build());
+    Set<AgentIdentifier> expected =
+        Collections.singleton(
+            AgentIdentifier.newBuilder()
+                .setType(AgentIdentifierType.WIKIDATA.name())
+                .setValue("https://www.wikidata.org/wiki/0000")
+                .build());
 
     // State
     String raw = "https://www.wikidata.org/wiki/0000";
@@ -109,10 +113,12 @@ public class AgentIdentifierParserTest {
   @Test
   public void parseWikidataWithoutSchemaTest() {
     // Expected
-    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
-        .setType(AgentIdentifierType.WIKIDATA.name())
-        .setValue("wikidata.org/wiki/0000")
-        .build());
+    Set<AgentIdentifier> expected =
+        Collections.singleton(
+            AgentIdentifier.newBuilder()
+                .setType(AgentIdentifierType.WIKIDATA.name())
+                .setValue("wikidata.org/wiki/0000")
+                .build());
 
     // State
     String raw = "wikidata.org/wiki/0000";
@@ -128,10 +134,12 @@ public class AgentIdentifierParserTest {
   @Test
   public void parseOtherTest() {
     // Expected
-    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
-        .setType(AgentIdentifierType.OTHER.name())
-        .setValue("something")
-        .build());
+    Set<AgentIdentifier> expected =
+        Collections.singleton(
+            AgentIdentifier.newBuilder()
+                .setType(AgentIdentifierType.OTHER.name())
+                .setValue("something")
+                .build());
 
     // State
     String raw = "something";
@@ -147,20 +155,21 @@ public class AgentIdentifierParserTest {
   @Test
   public void parseMixedTest() {
     // Expected
-    Set<AgentIdentifier> expected = Stream.of(
-        AgentIdentifier.newBuilder()
-            .setType(AgentIdentifierType.ORCID.name())
-            .setValue("https://orcid.org/0000-0002-0144-1997")
-            .build(),
-        AgentIdentifier.newBuilder()
-            .setType(AgentIdentifierType.WIKIDATA.name())
-            .setValue("wikidata.org/wiki/0000")
-            .build(),
-        AgentIdentifier.newBuilder()
-            .setType(AgentIdentifierType.OTHER.name())
-            .setValue("something")
-            .build()
-    ).collect(Collectors.toSet());
+    Set<AgentIdentifier> expected =
+        Stream.of(
+                AgentIdentifier.newBuilder()
+                    .setType(AgentIdentifierType.ORCID.name())
+                    .setValue("https://orcid.org/0000-0002-0144-1997")
+                    .build(),
+                AgentIdentifier.newBuilder()
+                    .setType(AgentIdentifierType.WIKIDATA.name())
+                    .setValue("wikidata.org/wiki/0000")
+                    .build(),
+                AgentIdentifier.newBuilder()
+                    .setType(AgentIdentifierType.OTHER.name())
+                    .setValue("something")
+                    .build())
+            .collect(Collectors.toSet());
 
     // State
     String raw = "wikidata.org/wiki/0000| something|0000-0002-0144-1997";
@@ -172,5 +181,4 @@ public class AgentIdentifierParserTest {
     assertFalse(set.isEmpty());
     assertEquals(expected, set);
   }
-
 }

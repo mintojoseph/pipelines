@@ -1,5 +1,12 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.elasticsearch.common.xcontent.XContentType.JSON;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -7,7 +14,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
@@ -41,22 +52,7 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
-
-import org.elasticsearch.action.index.IndexRequest;
 import org.slf4j.MDC;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
-
 
 /**
  * Pipeline sequence:
@@ -133,7 +129,8 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     log.info("Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn =
+        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     String esDocumentId = options.getEsDocumentId();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
@@ -286,7 +283,7 @@ public class InterpretedToEsIndexPipeline {
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
-    Map<String, TaggedValueRecord> taggedValueRecordMap  = taggedValuesMapFeature.get();
+    Map<String, TaggedValueRecord> taggedValueRecordMap = taggedValuesMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
     Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
@@ -297,30 +294,41 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
-    Function<BasicRecord, IndexRequest> indexRequestFn = br -> {
+    Function<BasicRecord, IndexRequest> indexRequestFn =
+        br -> {
+          String k = br.getId();
+          // Core
+          ExtendedRecord er =
+              verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
+          TaggedValueRecord tvr =
+              taggedValueRecordMap.getOrDefault(k, TaggedValueRecord.newBuilder().setId(k).build());
+          TemporalRecord tr =
+              temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
+          LocationRecord lr =
+              locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
+          TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+          // Extension
+          MultimediaRecord mr =
+              multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
+          ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
+          AudubonRecord ar =
+              audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
+          MeasurementOrFactRecord mfr =
+              measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
-      String k = br.getId();
-      // Core
-      ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
-      TaggedValueRecord tvr = taggedValueRecordMap.getOrDefault(k, TaggedValueRecord.newBuilder().setId(k).build());
-      TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
-      LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-      TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
-      // Extension
-      MultimediaRecord mr = multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
-      ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-      AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-      MeasurementOrFactRecord mfr = measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
+          MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+          ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, mmr, mfr, tvr, er);
 
-      MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, mmr, mfr, tvr, er);
+          metrics.incMetric(AVRO_TO_JSON_COUNT);
 
-      metrics.incMetric(AVRO_TO_JSON_COUNT);
+          String docId =
+              esDocumentId.equals(GBIF_ID)
+                  ? br.getGbifId().toString()
+                  : json.get(esDocumentId).asText();
 
-      String docId = esDocumentId.equals(GBIF_ID) ? br.getGbifId().toString() : json.get(esDocumentId).asText();
-
-      return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, docId).source(json.toString(), JSON);
-    };
+          return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, docId)
+              .source(json.toString(), JSON);
+        };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
@@ -338,6 +346,5 @@ public class InterpretedToEsIndexPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
-
   }
 }

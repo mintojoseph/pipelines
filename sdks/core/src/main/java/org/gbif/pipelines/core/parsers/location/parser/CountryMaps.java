@@ -9,11 +9,9 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.gbif.api.vocabulary.Country;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.vocabulary.Country;
 
 /** Maps of countries that are commonly confused, or are considered equivalent. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -31,12 +29,14 @@ public class CountryMaps {
   private static final Map<Country, Set<Country>> CONFUSED_COUNTRIES = new EnumMap<>(Country.class);
   // And this is the same, but without the issue — we aren't exactly following ISO, but we accept
   // it.
-  private static final Map<Country, Set<Country>> EQUIVALENT_COUNTRIES = new EnumMap<>(Country.class);
+  private static final Map<Country, Set<Country>> EQUIVALENT_COUNTRIES =
+      new EnumMap<>(Country.class);
 
   static {
     ClassLoader classLoader = CountryMaps.class.getClassLoader();
     try (InputStream in = classLoader.getResourceAsStream(CONFUSED_COUNTRY_FILE);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
       reader
           .lines()
           .filter(nextLine -> !nextLine.isEmpty() && !nextLine.startsWith("#"))
@@ -50,7 +50,8 @@ public class CountryMaps {
                 addConfusedCountry(countryB, countryA, addIssue);
               });
     } catch (IOException e) {
-      throw new IllegalArgumentException("Can't read [" + CONFUSED_COUNTRY_FILE + "] - aborting " + e.getMessage());
+      throw new IllegalArgumentException(
+          "Can't read [" + CONFUSED_COUNTRY_FILE + "] - aborting " + e.getMessage());
     }
   }
 

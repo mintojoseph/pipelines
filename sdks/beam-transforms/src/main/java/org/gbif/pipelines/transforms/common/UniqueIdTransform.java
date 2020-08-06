@@ -1,10 +1,12 @@
 package org.gbif.pipelines.transforms.common;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_OBJECTS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_COUNT;
+
 import java.util.Iterator;
-
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
-
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -13,18 +15,14 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_OBJECTS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_COUNT;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 
 /** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
 @Slf4j
 @NoArgsConstructor(staticName = "create")
-public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
+public class UniqueIdTransform
+    extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
   @Override
   public PCollection<ExtendedRecord> expand(PCollection<ExtendedRecord> input) {
@@ -36,13 +34,17 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
             .apply("Grouping by occurrenceId", GroupByKey.create());
 
     // Filter duplicate occurrenceIds, all groups where value size != 1
-    return groupedCollection.apply("Filtering duplicates",
+    return groupedCollection.apply(
+        "Filtering duplicates",
         ParDo.of(
             new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
 
-              private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, UNIQUE_IDS_COUNT);
-              private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, DUPLICATE_IDS_COUNT);
-              private final Counter identicalCounter = Metrics.counter(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT);
+              private final Counter uniqueCounter =
+                  Metrics.counter(UniqueIdTransform.class, UNIQUE_IDS_COUNT);
+              private final Counter duplicateCounter =
+                  Metrics.counter(UniqueIdTransform.class, DUPLICATE_IDS_COUNT);
+              private final Counter identicalCounter =
+                  Metrics.counter(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT);
 
               @ProcessElement
               public void processElement(ProcessContext c) {

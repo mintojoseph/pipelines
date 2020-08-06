@@ -1,26 +1,24 @@
 package org.gbif.pipelines.core.parsers.location;
 
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.gbif.api.vocabulary.Country;
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
-import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
+
+import java.util.Arrays;
+import java.util.Collections;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
+import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
+import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class LocationParserTest {
 

@@ -1,5 +1,9 @@
 package org.gbif.pipelines.crawler.xml;
 
+import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
+import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -7,7 +11,14 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.file.CodecFactory;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -23,26 +34,10 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.avro.file.CodecFactory;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
-import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
-
-/**
- * Call back which is called when the {@link PipelinesXmlMessage} is received.
- */
+/** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
-public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage> implements
-    StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
+public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage>
+    implements StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
   public static final int SKIP_RECORDS_CHECK = -1;
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -87,34 +82,44 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     return () -> {
 
       // Build and checks existence of DwC Archive
-      Path inputPath = buildXmlInputPath(config.archiveRepository, config.archiveRepositorySubdir, datasetId, attempt);
+      Path inputPath =
+          buildXmlInputPath(
+              config.archiveRepository, config.archiveRepositorySubdir, datasetId, attempt);
       log.info("XML path - {}", inputPath);
 
       // Builds export path of avro as extended record
       org.apache.hadoop.fs.Path outputPath =
-          buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.fileName);
+          buildOutputPath(
+              config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.fileName);
 
       // Builds metadata path, the yaml file with total number of converted records
       org.apache.hadoop.fs.Path metaPath =
-          buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
+          buildOutputPath(
+              config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 
       // Run main conversion process
-      boolean isConverted = XmlToAvroConverter.create()
-          .executor(executor)
-          .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
-          .syncInterval(config.avroConfig.syncInterval)
-          .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
-          .coreSiteConfig(config.stepConfig.coreSiteConfig)
-          .inputPath(inputPath)
-          .outputPath(outputPath)
-          .metaPath(metaPath)
-          .convert();
+      boolean isConverted =
+          XmlToAvroConverter.create()
+              .executor(executor)
+              .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
+              .syncInterval(config.avroConfig.syncInterval)
+              .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
+              .coreSiteConfig(config.stepConfig.coreSiteConfig)
+              .inputPath(inputPath)
+              .outputPath(outputPath)
+              .metaPath(metaPath)
+              .convert();
 
       if (isConverted) {
         checkRecordsSize(datasetId.toString(), attempt, expectedRecords);
       } else {
-        throw new IllegalArgumentException("Dataset - " + datasetId + " attempt - " + attempt
-            + " avro was deleted, cause it is empty! Please check XML files in the directory -> " + inputPath);
+        throw new IllegalArgumentException(
+            "Dataset - "
+                + datasetId
+                + " attempt - "
+                + attempt
+                + " avro was deleted, cause it is empty! Please check XML files in the directory -> "
+                + inputPath);
       }
     };
   }
@@ -132,13 +137,14 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     if (message.getPipelineSteps().isEmpty()) {
-      message.setPipelineSteps(new HashSet<>(Arrays.asList(
-          StepType.XML_TO_VERBATIM.name(),
-          StepType.VERBATIM_TO_INTERPRETED.name(),
-          StepType.INTERPRETED_TO_INDEX.name(),
-          StepType.HDFS_VIEW.name(),
-          StepType.FRAGMENTER.name()
-      )));
+      message.setPipelineSteps(
+          new HashSet<>(
+              Arrays.asList(
+                  StepType.XML_TO_VERBATIM.name(),
+                  StepType.VERBATIM_TO_INTERPRETED.name(),
+                  StepType.INTERPRETED_TO_INDEX.name(),
+                  StepType.HDFS_VIEW.name(),
+                  StepType.FRAGMENTER.name())));
     }
 
     return new PipelinesVerbatimMessage(
@@ -146,8 +152,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         message.getAttempt(),
         config.interpretTypes,
         message.getPipelineSteps(),
-        message.getEndpointType()
-    );
+        message.getEndpointType());
   }
 
   @Override
@@ -164,7 +169,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     }
     int currentSize = getIndexSize(config, httpClient, datasetId);
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
-    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
     String fileNumber;
     try {

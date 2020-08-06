@@ -1,33 +1,30 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.function.UnaryOperator;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.factory.BlastServiceClientFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AmplificationTransform;
-
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
 import org.slf4j.MDC;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
  * NOTE: REMEMBER THAT THIS PIPELINE MUST BE STARTED AFTER {@link VerbatimToInterpretedPipeline}
- * <p>
- * Pipeline sequence:
+ *
+ * <p>Pipeline sequence:
  *
  * <pre>
  *    1) Reads verbatim.avro file
@@ -70,9 +67,16 @@ public class VerbatimToInterpretedAmpPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
     PipelinesConfig config =
-        FsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(
+            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig,
+        coreSiteConfig,
+        targetPath,
+        datasetId,
+        attempt,
+        options.getInterpretationTypes());
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -81,7 +85,8 @@ public class VerbatimToInterpretedAmpPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
-    UnaryOperator<String> pathVerbatimFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathVerbatimFn =
+        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);

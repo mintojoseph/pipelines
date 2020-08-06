@@ -1,10 +1,8 @@
 package org.gbif.pipelines.core.ws.blast;
 
 import java.util.concurrent.TimeUnit;
-
-import org.gbif.pipelines.core.config.model.WsConfig;
-
 import okhttp3.OkHttpClient;
+import org.gbif.pipelines.core.config.model.WsConfig;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -48,5 +46,4 @@ public class BlastServiceFactory {
   public BlastService getService() {
     return service;
   }
-
 }

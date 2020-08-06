@@ -8,19 +8,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiFunction;
-
-import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 
-import static org.gbif.pipelines.ingest.options.DwcaPipelineOptions.PipelineStep.VERBATIM_TO_INTERPRETED;
-
-/**
- * Class to build an instance of ProcessBuilder for direct or spark command
- */
+/** Class to build an instance of ProcessBuilder for direct or spark command */
 @Slf4j
 @Builder
 final class ProcessRunnerBuilder {
@@ -28,14 +22,12 @@ final class ProcessRunnerBuilder {
   private static final String DELIMITER = " ";
 
   private InterpreterConfiguration config;
-  @NonNull
-  private PipelinesVerbatimMessage message;
+  @NonNull private PipelinesVerbatimMessage message;
   private int sparkParallelism;
   private int sparkExecutorNumbers;
   private String sparkExecutorMemory;
   private String sparkEventLogDir;
-  @NonNull
-  private String inputPath;
+  @NonNull private String inputPath;
 
   ProcessBuilder get() {
     if (StepRunner.DISTRIBUTED.name().equals(config.processRunner)) {
@@ -48,9 +40,7 @@ final class ProcessRunnerBuilder {
     return buildCommonOptions(new StringJoiner(DELIMITER)).split(DELIMITER);
   }
 
-  /**
-   * Builds ProcessBuilder to process spark command
-   */
+  /** Builds ProcessBuilder to process spark command */
   private ProcessBuilder buildSpark() {
     StringJoiner joiner = new StringJoiner(DELIMITER).add("spark2-submit");
 
@@ -58,14 +48,16 @@ final class ProcessRunnerBuilder {
         .ifPresent(x -> joiner.add("--conf spark.metrics.conf=" + x));
     Optional.ofNullable(config.extraClassPath)
         .ifPresent(x -> joiner.add("--conf \"spark.driver.extraClassPath=" + x + "\""));
-    Optional.ofNullable(config.driverJavaOptions).ifPresent(x -> joiner.add("--driver-java-options \"" + x + "\""));
+    Optional.ofNullable(config.driverJavaOptions)
+        .ifPresent(x -> joiner.add("--driver-java-options \"" + x + "\""));
     Optional.ofNullable(config.yarnQueue).ifPresent(x -> joiner.add("--queue " + x));
 
     if (sparkParallelism < 1) {
       throw new IllegalArgumentException("sparkParallelism can't be 0");
     }
 
-    joiner.add("--conf spark.default.parallelism=" + sparkParallelism)
+    joiner
+        .add("--conf spark.default.parallelism=" + sparkParallelism)
         .add("--conf spark.executor.memoryOverhead=" + config.sparkMemoryOverhead)
         .add("--conf spark.dynamicAllocation.enabled=false")
         .add("--conf spark.yarn.am.waitTime=360s")
@@ -82,14 +74,16 @@ final class ProcessRunnerBuilder {
   }
 
   /**
-   * Adds common properties to direct or spark process, for running Java pipelines with pipeline options
+   * Adds common properties to direct or spark process, for running Java pipelines with pipeline
+   * options
    */
   private String buildCommonOptions(StringJoiner command) {
 
     String interpretationTypes = String.join(",", message.getInterpretTypes());
 
     // Common properties
-    command.add("--datasetId=" + Objects.requireNonNull(message.getDatasetUuid()))
+    command
+        .add("--datasetId=" + Objects.requireNonNull(message.getDatasetUuid()))
         .add("--attempt=" + message.getAttempt())
         .add("--interpretationTypes=" + Objects.requireNonNull(interpretationTypes))
         .add("--runner=SparkRunner")
@@ -104,21 +98,22 @@ final class ProcessRunnerBuilder {
         .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()));
 
     Optional.ofNullable(message.getValidationResult())
-        .ifPresent(vr -> command
-            .add("--tripletValid=" + vr.isTripletValid())
-            .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid())
-        );
+        .ifPresent(
+            vr ->
+                command
+                    .add("--tripletValid=" + vr.isTripletValid())
+                    .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid()));
 
     Optional.ofNullable(message.getValidationResult())
         .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
         .ifPresent(x -> command.add("--useExtendedRecordId=" + x));
 
     return command.toString();
-
   }
 
   /**
-   * Adds common properties to direct or spark process, for running Java pipelines with pipeline options
+   * Adds common properties to direct or spark process, for running Java pipelines with pipeline
+   * options
    */
   private ProcessBuilder buildProcessCommon(StringJoiner command) {
 
@@ -135,16 +130,25 @@ final class ProcessRunnerBuilder {
 
     ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", result);
 
-    BiFunction<String, String, File> createDirFn = (String type, String path) -> {
-      try {
-        Files.createDirectories(Paths.get(path));
-        File file = new File(path + message.getDatasetUuid() + "_" + message.getAttempt() + "_int_" + type + ".log");
-        log.info("{} file - {}", type, file);
-        return file;
-      } catch (IOException ex) {
-        throw new IllegalStateException(ex);
-      }
-    };
+    BiFunction<String, String, File> createDirFn =
+        (String type, String path) -> {
+          try {
+            Files.createDirectories(Paths.get(path));
+            File file =
+                new File(
+                    path
+                        + message.getDatasetUuid()
+                        + "_"
+                        + message.getAttempt()
+                        + "_int_"
+                        + type
+                        + ".log");
+            log.info("{} file - {}", type, file);
+            return file;
+          } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+          }
+        };
 
     // The command side outputs
     if (config.processErrorDirectory != null) {
@@ -161,5 +165,4 @@ final class ProcessRunnerBuilder {
 
     return builder;
   }
-
 }

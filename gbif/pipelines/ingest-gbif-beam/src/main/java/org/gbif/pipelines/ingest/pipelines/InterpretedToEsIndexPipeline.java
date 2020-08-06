@@ -1,5 +1,8 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
+import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +33,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
-
-import java.util.function.UnaryOperator;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
  * Pipeline sequence:
@@ -95,7 +94,8 @@ public class InterpretedToEsIndexPipeline {
     String esDocumentId = options.getEsDocumentId();
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn =
+        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 
@@ -125,7 +125,9 @@ public class InterpretedToEsIndexPipeline {
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
-        p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(pathFn))
+        p.apply(
+                "Interpret TaggedValueRecords/MachinesTags interpretation",
+                taggedValuesTransform.read(pathFn))
             .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =

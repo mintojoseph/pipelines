@@ -1,5 +1,10 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_MISMATCH;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -20,20 +25,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulatorConverter;
 import org.gbif.pipelines.core.parsers.temporal.parser.ParserRawDateTime;
 import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_MISMATCH;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 /**
  * Main interpreter class. Interpreter for raw temporal period. The main method interpret two dates,
@@ -44,18 +41,22 @@ public class TemporalParser {
 
   private static final int ISSUE_SIZE = ParsedTemporalIssue.values().length;
 
-  private static final BiFunction<ChronoAccumulator, Set<ParsedTemporalIssue>, Temporal> TEMPORAL_FUNC =
-      (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
+  private static final BiFunction<ChronoAccumulator, Set<ParsedTemporalIssue>, Temporal>
+      TEMPORAL_FUNC = (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
-  private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime || t instanceof OffsetDateTime;
-  private static final Predicate<Temporal> HAS_MONTH_FN = t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
-  private static final Predicate<Temporal> HAS_YEAR_FN = t -> HAS_MONTH_FN.test(t) || t instanceof Year;
+  private static final Predicate<Temporal> HAS_DAY_FN =
+      t -> t instanceof LocalDate || t instanceof LocalDateTime || t instanceof OffsetDateTime;
+  private static final Predicate<Temporal> HAS_MONTH_FN =
+      t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
+  private static final Predicate<Temporal> HAS_YEAR_FN =
+      t -> HAS_MONTH_FN.test(t) || t instanceof Year;
 
   public static ParsedTemporal parse(String rawDate) {
     return parse("", "", "", rawDate);
   }
 
-  public static ParsedTemporal parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
+  public static ParsedTemporal parse(
+      String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isNullOrEmpty(rawYear) && isNullOrEmpty(rawDate)) {
       if (isNullOrEmpty(rawMonth) && isNullOrEmpty(rawDay)) {
@@ -76,7 +77,8 @@ public class TemporalParser {
     return mergeParsedTemporal(yearMonthDayParsed, eventDateParsed);
   }
 
-  private static ParsedTemporal parseYearMonthDayParsed(String rawYear, String rawMonth, String rawDay) {
+  private static ParsedTemporal parseYearMonthDayParsed(
+      String rawYear, String rawMonth, String rawDay) {
     Set<ParsedTemporalIssue> issues = new HashSet<>(ISSUE_SIZE);
     ChronoAccumulator accum = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
     // Convert year, month and day parsed values
@@ -87,7 +89,9 @@ public class TemporalParser {
 
     boolean hasIssue = issues.contains(DATE_INVALID) || issues.contains(DATE_UNLIKELY);
 
-    return hasIssue ? ParsedTemporal.create(issues) : ParsedTemporal.create(year, month, day, temporal, issues);
+    return hasIssue
+        ? ParsedTemporal.create(issues)
+        : ParsedTemporal.create(year, month, day, temporal, issues);
   }
 
   private static ParsedTemporal parseEventDate(String rawDate) {
@@ -128,7 +132,8 @@ public class TemporalParser {
     return ParsedTemporal.create(fromTemporal, toTemporal, issues);
   }
 
-  private static ParsedTemporal mergeParsedTemporal(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+  private static ParsedTemporal mergeParsedTemporal(
+      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
 
     if (!eventDateParsed.getFromOpt().isPresent() && !yearMonthDayParsed.getFromOpt().isPresent()) {
       return eventDateParsed.getIssues().isEmpty() ? yearMonthDayParsed : eventDateParsed;
@@ -146,11 +151,13 @@ public class TemporalParser {
   }
 
   /** Merge from date from event and date from yaer-month-day */
-  private static ParsedTemporal mergeFromAndYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+  private static ParsedTemporal mergeFromAndYmd(
+      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
 
     Temporal fromTemporal = eventDateParsed.getFromOpt().orElse(null);
 
-    if (yearMonthDayParsed.getFromOpt().isPresent() && yearMonthDayParsed.getFromDate().equals(fromTemporal)) {
+    if (yearMonthDayParsed.getFromOpt().isPresent()
+        && yearMonthDayParsed.getFromDate().equals(fromTemporal)) {
       return yearMonthDayParsed;
     }
 
@@ -170,22 +177,29 @@ public class TemporalParser {
     Month monthNotNull = fromMonth == null ? month : fromMonth;
     Month resultMonth = isMonthMatch ? monthNotNull : month;
 
-    Integer fromDay = HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
+    Integer fromDay =
+        HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
     Integer day = yearMonthDayParsed.getDay();
     boolean isDayMatch = fromDay == null || day == null || fromDay.equals(day);
     Integer dayNotNull = fromDay == null ? day : fromDay;
     Integer resultDay = isDayMatch ? dayNotNull : day;
 
     // To support US format
-    if (isYearMatch && !isMonthMatch && !isDayMatch && month.getValue() == fromDay && fromMonth.getValue() == day) {
+    if (isYearMatch
+        && !isMonthMatch
+        && !isDayMatch
+        && month.getValue() == fromDay
+        && fromMonth.getValue() == day) {
       isMonthMatch = true;
-      isDayMatch =  true;
+      isDayMatch = true;
     }
 
-    boolean hasTime = fromTemporal instanceof LocalDateTime || fromTemporal instanceof OffsetDateTime;
+    boolean hasTime =
+        fromTemporal instanceof LocalDateTime || fromTemporal instanceof OffsetDateTime;
     LocalTime resultTime = hasTime ? LocalTime.from(fromTemporal) : null;
 
-    ZoneOffset resultOffset = fromTemporal instanceof OffsetDateTime ? OffsetTime.from(fromTemporal).getOffset() : null;
+    ZoneOffset resultOffset =
+        fromTemporal instanceof OffsetDateTime ? OffsetTime.from(fromTemporal).getOffset() : null;
 
     if (!isYearMatch || !isMonthMatch || !isDayMatch) {
       yearMonthDayParsed.setFromDate(fromTemporal);
@@ -202,7 +216,8 @@ public class TemporalParser {
   }
 
   /** Merge from date from/to event and date from year-month-day */
-  private static ParsedTemporal mergeYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+  private static ParsedTemporal mergeYmd(
+      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
     // To support US format
     swapForUsFormat(yearMonthDayParsed, eventDateParsed);
 
@@ -230,10 +245,12 @@ public class TemporalParser {
     }
 
     Optional<Month> month = yearMonthDayParsed.getMonthOpt();
-    Integer fromDay = HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
+    Integer fromDay =
+        HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
     if (!yearMonthDayParsed.getDayOpt().isPresent() && month.isPresent()) {
       yearMonthDayParsed.setDay(fromDay);
-    } else if (yearMonthDayParsed.getDayOpt().isPresent() && month.isPresent()
+    } else if (yearMonthDayParsed.getDayOpt().isPresent()
+        && month.isPresent()
         && !yearMonthDayParsed.getDay().equals(fromDay)) {
       yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
       return yearMonthDayParsed;
@@ -243,21 +260,25 @@ public class TemporalParser {
   }
 
   /** Swap date and month if format is US */
-  private static void swapForUsFormat(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+  private static void swapForUsFormat(
+      ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
     Temporal fromDate = eventDateParsed.getFromDate();
     Temporal toDate = eventDateParsed.getToDate();
 
-    boolean containsDateMonthFrom = fromDate instanceof LocalDateTime
-        || fromDate instanceof LocalDate
-        || fromDate instanceof OffsetDateTime;
+    boolean containsDateMonthFrom =
+        fromDate instanceof LocalDateTime
+            || fromDate instanceof LocalDate
+            || fromDate instanceof OffsetDateTime;
 
-    boolean containsDateMonthTo = toDate instanceof LocalDateTime
-        || toDate instanceof LocalDate
-        || toDate instanceof OffsetDateTime;
+    boolean containsDateMonthTo =
+        toDate instanceof LocalDateTime
+            || toDate instanceof LocalDate
+            || toDate instanceof OffsetDateTime;
 
-    boolean containsDateMonthSimple = yearMonthDayParsed.getYearOpt().isPresent()
-        && yearMonthDayParsed.getMonthOpt().isPresent()
-        && yearMonthDayParsed.getDayOpt().isPresent();
+    boolean containsDateMonthSimple =
+        yearMonthDayParsed.getYearOpt().isPresent()
+            && yearMonthDayParsed.getMonthOpt().isPresent()
+            && yearMonthDayParsed.getDayOpt().isPresent();
 
     if (containsDateMonthFrom && containsDateMonthTo && containsDateMonthSimple) {
       if (!Month.from(fromDate).equals(yearMonthDayParsed.getMonth())
@@ -270,30 +291,57 @@ public class TemporalParser {
         if (fromDate instanceof OffsetDateTime && toDate instanceof OffsetDateTime) {
           OffsetDateTime ldtf = (OffsetDateTime) fromDate;
           OffsetDateTime ldtt = (OffsetDateTime) toDate;
-          fromTemporal = OffsetDateTime.of(
-              LocalDateTime.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue(), ldtf.getHour(), ldtf.getMinute(), ldtf.getSecond()),
-              ldtf.getOffset()
-          );
-          toTemporal = OffsetDateTime.of(
-              LocalDateTime.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue(), ldtt.getHour(), ldtt.getMinute(), ldtt.getSecond()),
-              ldtt.getOffset()
-          );
+          fromTemporal =
+              OffsetDateTime.of(
+                  LocalDateTime.of(
+                      ldtf.getYear(),
+                      ldtf.getDayOfMonth(),
+                      ldtf.getMonth().getValue(),
+                      ldtf.getHour(),
+                      ldtf.getMinute(),
+                      ldtf.getSecond()),
+                  ldtf.getOffset());
+          toTemporal =
+              OffsetDateTime.of(
+                  LocalDateTime.of(
+                      ldtt.getYear(),
+                      ldtt.getDayOfMonth(),
+                      ldtt.getMonth().getValue(),
+                      ldtt.getHour(),
+                      ldtt.getMinute(),
+                      ldtt.getSecond()),
+                  ldtt.getOffset());
         } else if (fromDate instanceof LocalDateTime && toDate instanceof LocalDateTime) {
           LocalDateTime ldtf = (LocalDateTime) fromDate;
           LocalDateTime ldtt = (LocalDateTime) toDate;
-          fromTemporal = LocalDateTime.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue(), ldtf.getHour(), ldtf.getMinute(), ldtf.getSecond());
-          toTemporal = LocalDateTime.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue(), ldtt.getHour(), ldtt.getMinute(), ldtt.getSecond());
+          fromTemporal =
+              LocalDateTime.of(
+                  ldtf.getYear(),
+                  ldtf.getDayOfMonth(),
+                  ldtf.getMonth().getValue(),
+                  ldtf.getHour(),
+                  ldtf.getMinute(),
+                  ldtf.getSecond());
+          toTemporal =
+              LocalDateTime.of(
+                  ldtt.getYear(),
+                  ldtt.getDayOfMonth(),
+                  ldtt.getMonth().getValue(),
+                  ldtt.getHour(),
+                  ldtt.getMinute(),
+                  ldtt.getSecond());
         } else if (fromDate instanceof LocalDate && toDate instanceof LocalDate) {
           LocalDate ldtf = (LocalDate) fromDate;
           LocalDate ldtt = (LocalDate) toDate;
-          fromTemporal = LocalDate.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue());
-          toTemporal = LocalDate.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue());
+          fromTemporal =
+              LocalDate.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue());
+          toTemporal =
+              LocalDate.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue());
         }
         eventDateParsed.setFromDate(fromTemporal);
         eventDateParsed.setToDate(toTemporal);
       }
     }
-
   }
 
   /** Compare dates, FROM cannot be greater than TO */

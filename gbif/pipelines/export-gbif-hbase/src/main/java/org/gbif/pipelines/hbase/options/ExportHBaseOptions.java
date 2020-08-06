@@ -4,9 +4,7 @@ import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 
-/**
- * Pipeline settings and arguments for Hbase to Avro export.
- */
+/** Pipeline settings and arguments for Hbase to Avro export. */
 public interface ExportHBaseOptions extends HadoopFileSystemOptions {
 
   @Description("HBase Zookeeper ensemble")

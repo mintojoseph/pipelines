@@ -4,8 +4,23 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.function.UnaryOperator;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.join.CoGbkResult;
+import org.apache.beam.sdk.transforms.join.CoGroupByKey;
+import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
@@ -18,7 +33,6 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
@@ -35,24 +49,7 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
-
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
-import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Pipeline sequence:
@@ -109,9 +106,11 @@ public class VerbatimToInterpretedPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
     PipelinesConfig config =
-        FsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(
+            hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -168,7 +167,8 @@ public class VerbatimToInterpretedPipeline {
     ImageTransform imageTransform = ImageTransform.create();
 
     // Extra
-    UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
+    UniqueGbifIdTransform gbifIdTransform =
+        UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     log.info("Creating beam pipeline");
     // Create and write metadata
@@ -187,19 +187,22 @@ public class VerbatimToInterpretedPipeline {
     locationTransform.setMetadataView(metadataView);
     taggedValuesTransform.setMetadataView(metadataView);
 
-    PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
-        verbatimTransform.emptyCollection(p) :
-        p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
-            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values",
-                DefaultValuesTransform.builder()
-                    .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
-                    .datasetId(datasetId)
-                    .create());
+    PCollection<ExtendedRecord> uniqueRecords =
+        metadataTransform.metadataOnly(types)
+            ? verbatimTransform.emptyCollection(p)
+            : p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
+                .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
+                .apply("Filter duplicates", UniqueIdTransform.create())
+                .apply(
+                    "Set default values",
+                    DefaultValuesTransform.builder()
+                        .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
+                        .datasetId(datasetId)
+                        .create());
 
     PCollectionTuple basicCollection =
-        uniqueRecords.apply("Check basic transform condition", basicTransform.check(types))
+        uniqueRecords
+            .apply("Check basic transform condition", basicTransform.check(types))
             .apply("Interpret basic", basicTransform.interpret())
             .apply("Get invalid GBIF IDs", gbifIdTransform);
 
@@ -208,11 +211,13 @@ public class VerbatimToInterpretedPipeline {
         uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv =
-        basicCollection.get(gbifIdTransform.getInvalidTag())
+        basicCollection
+            .get(gbifIdTransform.getInvalidTag())
             .apply("Map basic to KV", basicTransform.toKv());
 
     SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> filterByGbifIdFn =
-        FilterExtendedRecordTransform.create(verbatimTransform.getTag(), basicTransform.getTag()).filter();
+        FilterExtendedRecordTransform.create(verbatimTransform.getTag(), basicTransform.getTag())
+            .filter();
 
     PCollection<ExtendedRecord> filteredUniqueRecords =
         KeyedPCollectionTuple
@@ -224,10 +229,12 @@ public class VerbatimToInterpretedPipeline {
             .apply("Filter verbatim", filterByGbifIdFn);
 
     // Interpret and write all record types
-    basicCollection.get(gbifIdTransform.getTag())
+    basicCollection
+        .get(gbifIdTransform.getTag())
         .apply("Write basic to avro", basicTransform.write(pathFn));
 
-    basicCollection.get(gbifIdTransform.getInvalidTag())
+    basicCollection
+        .get(gbifIdTransform.getInvalidTag())
         .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
 
     filteredUniqueRecords

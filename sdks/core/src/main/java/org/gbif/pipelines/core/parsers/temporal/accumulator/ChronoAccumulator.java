@@ -1,15 +1,14 @@
 package org.gbif.pipelines.core.parsers.temporal.accumulator;
 
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import java.time.temporal.ChronoField;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static java.time.temporal.ChronoField.DAY_OF_MONTH;
-import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
-import static java.time.temporal.ChronoField.YEAR;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /** The accumulator class for storing all parsed chrono fields */
 public class ChronoAccumulator {
@@ -30,7 +29,7 @@ public class ChronoAccumulator {
    * Set raw value
    *
    * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
-   * MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
    * @param rawValue raw value for parsing
    */
   public void setChronoField(ChronoField chronoField, String rawValue) {

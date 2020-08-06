@@ -1,11 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
+
 import java.util.Optional;
-
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.SerializableConsumer;
-import org.gbif.pipelines.transforms.Transform;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -13,18 +11,19 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.Transform;
 
 /**
- * Beam level transformations for the raw representation of DWC, reads an avro, writes an avro, maps from value to
- * keyValue
+ * Beam level transformations for the raw representation of DWC, reads an avro, writes an avro, maps
+ * from value to keyValue
  */
 public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord> {
 
   private VerbatimTransform() {
-    super(ExtendedRecord.class, VERBATIM, VerbatimTransform.class.getName(), VERBATIM_RECORDS_COUNT);
+    super(
+        ExtendedRecord.class, VERBATIM, VerbatimTransform.class.getName(), VERBATIM_RECORDS_COUNT);
   }
 
   public static VerbatimTransform create() {

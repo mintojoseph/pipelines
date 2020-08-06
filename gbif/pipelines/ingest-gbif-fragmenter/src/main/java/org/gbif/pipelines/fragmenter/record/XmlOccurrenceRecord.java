@@ -1,13 +1,11 @@
 package org.gbif.pipelines.fragmenter.record;
 
 import java.util.Optional;
-
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class XmlOccurrenceRecord implements OccurrenceRecord {

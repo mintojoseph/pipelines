@@ -1,8 +1,7 @@
 package org.gbif.pipelines.core.ws.blast.response;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.io.Serializable;
 import lombok.Data;
 
 @Data

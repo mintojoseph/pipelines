@@ -1,11 +1,16 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -17,13 +22,6 @@ import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
-
 /**
  * Parses the location fields.
  *
@@ -32,14 +30,16 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationParser {
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+  public static ParsedField<ParsedLocation> parse(
+      ExtendedRecord er, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
     ModelUtils.checkNullOrEmpty(er);
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
     Set<String> issues = new TreeSet<>();
 
     // Parse country
-    ParsedField<Country> parsedCountry = parseCountry(er, VocabularyParser.countryParser(), COUNTRY_INVALID.name());
+    ParsedField<Country> parsedCountry =
+        parseCountry(er, VocabularyParser.countryParser(), COUNTRY_INVALID.name());
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
@@ -48,7 +48,9 @@ public class LocationParser {
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
-    if (parsedCountry.isSuccessful() && parsedCountryCode.isSuccessful() && !countryName.equals(countryCode)) {
+    if (parsedCountry.isSuccessful()
+        && parsedCountryCode.isSuccessful()
+        && !countryName.equals(countryCode)) {
       issues.add(COUNTRY_MISMATCH.name());
     }
 
@@ -98,7 +100,8 @@ public class LocationParser {
         .build();
   }
 
-  private static ParsedField<Country> parseCountry(ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
+  private static ParsedField<Country> parseCountry(
+      ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
     if (!parseResultOpt.isPresent()) {

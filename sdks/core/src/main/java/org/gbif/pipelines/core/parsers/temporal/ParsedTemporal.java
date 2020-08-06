@@ -9,12 +9,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import org.gbif.pipelines.core.parsers.temporal.utils.TemporalUtils;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gbif.pipelines.core.parsers.temporal.utils.TemporalUtils;
 
 /** Base temporal class, consists of two parsed dates from and to, also year, month and day */
 @Getter
@@ -41,7 +39,8 @@ public class ParsedTemporal {
     return parsedTemporal;
   }
 
-  public static ParsedTemporal create(Temporal fromDate, Temporal toDate, Set<ParsedTemporalIssue> issues) {
+  public static ParsedTemporal create(
+      Temporal fromDate, Temporal toDate, Set<ParsedTemporalIssue> issues) {
     ParsedTemporal parsedTemporal = create();
     parsedTemporal.setFromDate(fromDate);
     parsedTemporal.setToDate(toDate);
@@ -49,8 +48,8 @@ public class ParsedTemporal {
     return parsedTemporal;
   }
 
-  public static ParsedTemporal create(Year year, Month month, Integer day, Temporal fromDate,
-      Set<ParsedTemporalIssue> issues) {
+  public static ParsedTemporal create(
+      Year year, Month month, Integer day, Temporal fromDate, Set<ParsedTemporalIssue> issues) {
     ParsedTemporal parsedTemporal = create();
     parsedTemporal.setFromDate(fromDate);
     parsedTemporal.setYear(year);

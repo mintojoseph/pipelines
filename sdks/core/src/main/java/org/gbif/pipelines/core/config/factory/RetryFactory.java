@@ -1,14 +1,12 @@
 package org.gbif.pipelines.core.config.factory;
 
-import java.util.Objects;
-
-import org.gbif.pipelines.core.config.model.RetryConfig;
-
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.pipelines.core.config.model.RetryConfig;
 
 /**
  * Creates the configuration to use a retry service.
@@ -18,18 +16,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RetryFactory {
 
-  /**
-   * @return a new {@link Retry} instance using the supplied configuration.
-   */
+  /** @return a new {@link Retry} instance using the supplied configuration. */
   public static Retry create(@Nullable RetryConfig retryConfig, String name) {
     RetryConfig config = Objects.isNull(retryConfig) ? new RetryConfig() : retryConfig;
-    IntervalFunction intervalFn = IntervalFunction.ofExponentialRandomBackoff(config.getInitialIntervalMillis(),
-        config.getMultiplier(),
-        config.getRandomizationFactor());
-    io.github.resilience4j.retry.RetryConfig resilienceRetryConfig = io.github.resilience4j.retry.RetryConfig.custom()
-        .maxAttempts(config.getMaxAttempts())
-        .intervalFunction(intervalFn)
-        .build();
+    IntervalFunction intervalFn =
+        IntervalFunction.ofExponentialRandomBackoff(
+            config.getInitialIntervalMillis(),
+            config.getMultiplier(),
+            config.getRandomizationFactor());
+    io.github.resilience4j.retry.RetryConfig resilienceRetryConfig =
+        io.github.resilience4j.retry.RetryConfig.custom()
+            .maxAttempts(config.getMaxAttempts())
+            .intervalFunction(intervalFn)
+            .build();
     return Retry.of(name, resilienceRetryConfig);
   }
 }

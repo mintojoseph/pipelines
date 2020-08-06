@@ -1,12 +1,20 @@
 package org.gbif.pipelines.crawler.indexing;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -24,20 +32,7 @@ import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
- */
+/** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
@@ -82,22 +77,24 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Only correct messages can be handled, by now is only messages with the same runner as runner in service config
-   * {@link IndexingConfiguration#processRunner}
+   * Only correct messages can be handled, by now is only messages with the same runner as runner in
+   * service config {@link IndexingConfiguration#processRunner}
    */
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
     }
-    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
+    if (message.getOnlyForStep() != null
+        && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
       return false;
     }
     return config.processRunner.equals(message.getRunner());
   }
 
   /**
-   * Main message processing logic, creates a terminal java process, which runs interpreted-to-index pipeline
+   * Main message processing logic, creates a terminal java process, which runs interpreted-to-index
+   * pipeline
    */
   @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
@@ -108,12 +105,13 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         String indexName = computeIndexName(message, recordsNumber);
         int numberOfShards = computeNumberOfShards(indexName, recordsNumber);
 
-        ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
-            .config(config)
-            .message(message)
-            .esIndexName(indexName)
-            .esAlias(config.indexAlias)
-            .esShardsNumber(numberOfShards);
+        ProcessRunnerBuilderBuilder builder =
+            ProcessRunnerBuilder.builder()
+                .config(config)
+                .message(message)
+                .esIndexName(indexName)
+                .esAlias(config.indexAlias)
+                .esShardsNumber(numberOfShards);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -125,32 +123,31 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
-        throw new IllegalStateException("Failed interpretation on " + message.getDatasetUuid().toString(), ex);
+        throw new IllegalStateException(
+            "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
-
     };
   }
 
   @Override
   public PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     return new PipelinesIndexedMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        message.getPipelineSteps()
-    );
+        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
     InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder,
-      long recordsNumber) throws IOException, InterruptedException {
+  private void runDistributed(
+      PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder, long recordsNumber)
+      throws IOException, InterruptedException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
 
-    builder.sparkParallelism(computeSparkParallelism(datasetId, attempt))
+    builder
+        .sparkParallelism(computeSparkParallelism(datasetId, attempt))
         .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers, recordsNumber))
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
@@ -165,16 +162,19 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the number of thread for spark.default.parallelism, top limit is config.sparkParallelismMax
+   * Computes the number of thread for spark.default.parallelism, top limit is
+   * config.sparkParallelismMax
    */
   private int computeSparkParallelism(String datasetId, String attempt) throws IOException {
     // Chooses a runner type by calculating number of files
     String basic = RecordType.BASIC.name().toLowerCase();
     String directoryName = Interpretation.DIRECTORY_NAME;
     String basicPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
+        String.join(
+            "/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
     int count =
-        HdfsUtils.getFileCount(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, basicPath);
+        HdfsUtils.getFileCount(
+            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, basicPath);
     count *= 4;
     if (count < config.sparkParallelismMin) {
       return config.sparkParallelismMin;
@@ -186,12 +186,16 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and
-   * max is config.sparkExecutorMemoryGbMax
+   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
+   * config.sparkExecutorMemoryGbMax
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers, long recordsNumber) {
     int size =
-        (int) Math.ceil((double) recordsNumber / (sparkExecutorNumbers * config.sparkRecordsPerThread) * 1.6);
+        (int)
+            Math.ceil(
+                (double) recordsNumber
+                    / (sparkExecutorNumbers * config.sparkRecordsPerThread)
+                    * 1.6);
 
     if (size < config.sparkExecutorMemoryGbMin) {
       return config.sparkExecutorMemoryGbMin + "G";
@@ -203,14 +207,17 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and
-   * max is config.sparkExecutorNumbersMax
-   * <p>
-   * 500_000d is records per executor
+   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and max is
+   * config.sparkExecutorNumbersMax
+   *
+   * <p>500_000d is records per executor
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
     int sparkExecutorNumbers =
-        (int) Math.ceil((double) recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
+        (int)
+            Math.ceil(
+                (double) recordsNumber
+                    / (config.sparkExecutorCores * config.sparkRecordsPerThread));
     if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
       return config.sparkExecutorNumbersMin;
     }
@@ -221,13 +228,13 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the name for ES index:
-   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
-   * Case 2 - Default static index name for datasets where last changed date more than
-   * config.indexDefStaticDateDurationDd
-   * Case 3 - Default dynamic index name for all other datasets
+   * Computes the name for ES index: Case 1 - Independent index for datasets where number of records
+   * more than config.indexIndepRecord Case 2 - Default static index name for datasets where last
+   * changed date more than config.indexDefStaticDateDurationDd Case 3 - Default dynamic index name
+   * for all other datasets
    */
-  private String computeIndexName(PipelinesInterpretedMessage message, long recordsNumber) throws IOException {
+  private String computeIndexName(PipelinesInterpretedMessage message, long recordsNumber)
+      throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String prefix = message.getResetPrefix();
@@ -244,20 +251,24 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     }
 
     // Default index name for all other datasets
-    String esPr = prefix == null ? config.indexDefaultPrefixName : config.indexDefaultPrefixName + "_" + prefix;
+    String esPr =
+        prefix == null
+            ? config.indexDefaultPrefixName
+            : config.indexDefaultPrefixName + "_" + prefix;
     idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
     log.info("ES Index name - {}", idxName);
     return idxName;
   }
 
   /**
-   * Computes number of index shards:
-   * 1) in case of default index -> config.indexDefSize / config.indexRecordsPerShard
-   * 2) in case of independent index -> recordsNumber / config.indexRecordsPerShard
+   * Computes number of index shards: 1) in case of default index -> config.indexDefSize /
+   * config.indexRecordsPerShard 2) in case of independent index -> recordsNumber /
+   * config.indexRecordsPerShard
    */
   private int computeNumberOfShards(String indexName, long recordsNumber) {
     if (indexName.startsWith(config.indexDefaultPrefixName)) {
-      return (int) Math.ceil((double) config.indexDefaultSize / (double) config.indexRecordsPerShard);
+      return (int)
+          Math.ceil((double) config.indexDefaultSize / (double) config.indexRecordsPerShard);
     }
 
     double shards = (double) recordsNumber / (double) config.indexRecordsPerShard;
@@ -267,14 +278,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains attempted records
-   * count, which is not accurate enough
+   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * attempted records count, which is not accurate enough
    */
   private long getRecordNumber(PipelinesInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
@@ -300,9 +312,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
   }
 
-  /**
-   * Returns index name by index prefix where number of records is less than configured
-   */
+  /** Returns index name by index prefix where number of records is less than configured */
   private Optional<String> getIndexName(String prefix) throws IOException {
     String url = String.format(config.esIndexCatUrl, prefix);
     HttpUriRequest httpGet = new HttpGet(url);
@@ -311,11 +321,11 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
     }
     List<EsCatIndex> indices =
-        MAPPER.readValue(response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
+        MAPPER.readValue(
+            response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
     if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexDefaultNewIfSize) {
       return Optional.of(indices.get(0).getName());
     }
     return Optional.empty();
   }
-
 }

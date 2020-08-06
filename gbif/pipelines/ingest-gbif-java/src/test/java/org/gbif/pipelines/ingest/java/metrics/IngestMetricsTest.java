@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import org.apache.beam.sdk.metrics.MetricResults;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,14 +21,16 @@ public class IngestMetricsTest {
     String name = "someName";
 
     // When
-    IngestMetrics metrics = IngestMetrics.create()
-        .addMetric(namespace, name);
+    IngestMetrics metrics = IngestMetrics.create().addMetric(namespace, name);
     metrics.incMetric(name);
     MetricResults result = metrics.getMetricsResult();
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(name));
@@ -43,8 +44,7 @@ public class IngestMetricsTest {
     String name = "someName";
 
     // When
-    IngestMetrics metrics = IngestMetrics.create()
-        .addMetric(namespace, name);
+    IngestMetrics metrics = IngestMetrics.create().addMetric(namespace, name);
     metrics.incMetric(name);
     metrics.incMetric(name);
     metrics.incMetric(name);
@@ -52,7 +52,10 @@ public class IngestMetricsTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
     Assert.assertEquals(Long.valueOf(3L), map.get(name));
@@ -71,7 +74,10 @@ public class IngestMetricsTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(0, map.size());
     Assert.assertNull(map.get(name));
@@ -87,9 +93,8 @@ public class IngestMetricsTest {
     String name2 = "someName2";
 
     // When
-    IngestMetrics metrics = IngestMetrics.create()
-        .addMetric(namespace, name)
-        .addMetric(namespace2, name2);
+    IngestMetrics metrics =
+        IngestMetrics.create().addMetric(namespace, name).addMetric(namespace2, name2);
     metrics.incMetric(name);
     metrics.incMetric(name);
     metrics.incMetric(name);
@@ -101,12 +106,14 @@ public class IngestMetricsTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(2, map.size());
     Assert.assertEquals(Long.valueOf(3L), map.get(name));
     Assert.assertEquals(Long.valueOf(4L), map.get(name2));
-
   }
 
   @Test
@@ -122,9 +129,8 @@ public class IngestMetricsTest {
     ExecutorService executor = Executors.newWorkStealingPool(2);
 
     // When
-    IngestMetrics metrics = IngestMetrics.create()
-        .addMetric(namespace, name)
-        .addMetric(namespace2, name2);
+    IngestMetrics metrics =
+        IngestMetrics.create().addMetric(namespace, name).addMetric(namespace2, name2);
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     for (int x = 0; x < count; x++) {
@@ -138,12 +144,13 @@ public class IngestMetricsTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(2, map.size());
     Assert.assertEquals(count, map.get(name));
     Assert.assertEquals(count, map.get(name2));
-
   }
-
 }

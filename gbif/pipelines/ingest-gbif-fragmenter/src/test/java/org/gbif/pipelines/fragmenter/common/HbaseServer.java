@@ -1,18 +1,15 @@
 package org.gbif.pipelines.fragmenter.common;
 
 import java.io.IOException;
-
-import org.gbif.pipelines.keygen.config.KeygenConfig;
-
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.junit.rules.ExternalResource;
-
-import lombok.Getter;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
@@ -68,5 +65,4 @@ public class HbaseServer extends ExternalResource {
       connection.close();
     }
   }
-
 }

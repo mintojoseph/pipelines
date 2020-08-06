@@ -1,30 +1,23 @@
 package org.gbif.pipelines.common.configs;
 
-import org.gbif.common.messaging.config.MessagingConfiguration;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.common.messaging.config.MessagingConfiguration;
 
 @ToString
 public class StepConfiguration {
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
+  @ParametersDelegate @Valid @NotNull
   public ZooKeeperConfiguration zooKeeper = new ZooKeeperConfiguration();
 
-  @ParametersDelegate
-  @NotNull
-  @Valid
+  @ParametersDelegate @NotNull @Valid
   public RegistryConfiguration registry = new RegistryConfiguration();
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
+  @ParametersDelegate @Valid @NotNull
   public MessagingConfiguration messaging = new MessagingConfiguration();
 
   @Parameter(names = "--queue-name")
@@ -47,5 +40,4 @@ public class StepConfiguration {
   @Parameter(names = "--repository-path")
   @NotNull
   public String repositoryPath;
-
 }

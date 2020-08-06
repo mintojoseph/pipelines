@@ -1,16 +1,14 @@
 package org.gbif.pipelines.core.parsers.temporal.parser;
 
-import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
 
 /** Interpreter for raw time. The main method parse */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -43,9 +41,9 @@ class ParserRawTime {
 
     // Commented to support API v1, see issue -> https://github.com/gbif/gbif-api/issues/3
     // Can be uncommented for API v2
-    //if (timeZoneArray.length == 2 && timeZoneArray[1].length() > 1) {
+    // if (timeZoneArray.length == 2 && timeZoneArray[1].length() > 1) {
     //  accumulator.setChronoField(OFFSET_SECONDS, timeZoneArray[1]);
-    //}
+    // }
 
     return accumulator;
   }

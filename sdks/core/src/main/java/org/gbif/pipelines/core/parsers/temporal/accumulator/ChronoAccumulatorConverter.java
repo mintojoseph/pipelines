@@ -1,5 +1,15 @@
 package org.gbif.pipelines.core.parsers.temporal.accumulator;
 
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.OFFSET_SECONDS;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
+import static java.time.temporal.ChronoField.YEAR;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -13,23 +23,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue;
-import org.gbif.pipelines.core.parsers.temporal.utils.ParsedUnitUtils;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import static java.time.temporal.ChronoField.DAY_OF_MONTH;
-import static java.time.temporal.ChronoField.HOUR_OF_DAY;
-import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
-import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
-import static java.time.temporal.ChronoField.OFFSET_SECONDS;
-import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
-import static java.time.temporal.ChronoField.YEAR;
-
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
+import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue;
+import org.gbif.pipelines.core.parsers.temporal.utils.ParsedUnitUtils;
 
 /** The main function convert ChronoAccumulator to Temporal in appropriative way */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -37,7 +34,8 @@ public class ChronoAccumulatorConverter {
 
   private static final Year OLD_YEAR = Year.of(1600);
 
-  private static final Map<ChronoField, Function<String, Optional<Integer>>> FN_MAP = new EnumMap<>(ChronoField.class);
+  private static final Map<ChronoField, Function<String, Optional<Integer>>> FN_MAP =
+      new EnumMap<>(ChronoField.class);
 
   static {
     FN_MAP.put(YEAR, ParsedUnitUtils::parseYear);
@@ -53,7 +51,8 @@ public class ChronoAccumulatorConverter {
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
-  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+  public static Optional<Temporal> toTemporal(
+      ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
 
     // Check Year
     Optional<Year> optYear = getYear(accumulator, issues);
@@ -69,7 +68,8 @@ public class ChronoAccumulatorConverter {
       // Swap, maybe US format
       Optional<String> dayOfMonth = accumulator.getChronoFileValue(DAY_OF_MONTH);
       Optional<String> monthOfYear = accumulator.getChronoFileValue(MONTH_OF_YEAR);
-      if (dayOfMonth.isPresent() && monthOfYear.isPresent()
+      if (dayOfMonth.isPresent()
+          && monthOfYear.isPresent()
           && ParsedUnitUtils.parseMonth(dayOfMonth.get()).isPresent()
           && ParsedUnitUtils.parseDay(monthOfYear.get()).isPresent()) {
         accumulator.setChronoField(MONTH_OF_YEAR, dayOfMonth.get());
@@ -133,9 +133,11 @@ public class ChronoAccumulatorConverter {
    * @param accumulator - where to look for a value
    * @return Year value if present
    */
-  public static Optional<Year> getYear(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+  public static Optional<Year> getYear(
+      ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
     Optional<Integer> integer = convert(accumulator, YEAR, issues);
-    if (integer.isPresent() && (integer.get() < OLD_YEAR.getValue() || integer.get() > Year.now().getValue())) {
+    if (integer.isPresent()
+        && (integer.get() < OLD_YEAR.getValue() || integer.get() > Year.now().getValue())) {
       issues.add(DATE_UNLIKELY);
       return Optional.empty();
     }
@@ -148,7 +150,8 @@ public class ChronoAccumulatorConverter {
    * @param accumulator - where to look for a value
    * @return Month value if present
    */
-  public static Optional<Month> getMonth(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+  public static Optional<Month> getMonth(
+      ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
     Optional<Integer> integer = convert(accumulator, MONTH_OF_YEAR, issues);
     if (integer.isPresent() && (integer.get() < 1 || integer.get() > 12)) {
       issues.add(DATE_INVALID);
@@ -163,7 +166,8 @@ public class ChronoAccumulatorConverter {
    * @param accumulator - where to look for a value
    * @return Integer day value if present
    */
-  public static Optional<Integer> getDay(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+  public static Optional<Integer> getDay(
+      ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
     Optional<Integer> integer = convert(accumulator, DAY_OF_MONTH, issues);
     if (integer.isPresent() && (integer.get() < 1 || integer.get() > 31)) {
       issues.add(DATE_INVALID);
@@ -177,10 +181,10 @@ public class ChronoAccumulatorConverter {
    *
    * @param accumulator raw value for parsing
    * @param field one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
-   * MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField field,
-      Set<ParsedTemporalIssue> issues) {
+  private static Optional<Integer> convert(
+      ChronoAccumulator accumulator, ChronoField field, Set<ParsedTemporalIssue> issues) {
     Optional<String> rawValue = accumulator.getChronoFileValue(field);
     if (rawValue.isPresent()) {
       Optional<Integer> value = FN_MAP.get(field).apply(rawValue.get());

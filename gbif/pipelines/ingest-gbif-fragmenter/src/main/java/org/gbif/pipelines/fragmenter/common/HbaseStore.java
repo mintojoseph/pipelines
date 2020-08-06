@@ -7,18 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.gbif.api.vocabulary.EndpointType;
-
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.util.Bytes;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.gbif.api.vocabulary.EndpointType;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -35,20 +32,33 @@ public class HbaseStore {
   private static final byte[] DUQ_BYTES = Bytes.toBytes("dateUpdated");
 
   @SneakyThrows
-  public static void putRecords(Table table, String datasetKey, Integer attempt, EndpointType endpointType,
+  public static void putRecords(
+      Table table,
+      String datasetKey,
+      Integer attempt,
+      EndpointType endpointType,
       Map<String, String> fragmentsMap) {
 
     Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
 
-    List<Put> putList = fragmentsMap.entrySet().stream()
-        .map(es -> createFragmentPut(datasetKey, attempt, endpointType.name(), es.getKey(), es.getValue(),
-            dateMap.get(es.getKey())))
-        .collect(Collectors.toList());
+    List<Put> putList =
+        fragmentsMap.entrySet().stream()
+            .map(
+                es ->
+                    createFragmentPut(
+                        datasetKey,
+                        attempt,
+                        endpointType.name(),
+                        es.getKey(),
+                        es.getValue(),
+                        dateMap.get(es.getKey())))
+            .collect(Collectors.toList());
 
     table.put(putList);
   }
 
-  private static Map<String, Long> getCreatedDateMap(Table table, Map<String, String> fragmentsMap) throws IOException {
+  private static Map<String, Long> getCreatedDateMap(Table table, Map<String, String> fragmentsMap)
+      throws IOException {
 
     Map<String, Long> createdDateMap = new HashMap<>();
 
@@ -63,7 +73,12 @@ public class HbaseStore {
     return createdDateMap;
   }
 
-  private static Put createFragmentPut(String datasetKey, Integer attempt, String protocol, String key, String record,
+  private static Put createFragmentPut(
+      String datasetKey,
+      Integer attempt,
+      String protocol,
+      String key,
+      String record,
       Long created) {
     long timestampUpdated = Instant.now().toEpochMilli();
     long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);
@@ -113,5 +128,4 @@ public class HbaseStore {
   public static byte[] getDateUpdatedQualifier() {
     return DUQ_BYTES;
   }
-
 }

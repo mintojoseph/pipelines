@@ -1,21 +1,19 @@
 package org.gbif.pipelines.common.configs;
 
-import java.util.Properties;
-
-import org.gbif.cli.ConfigUtils;
-import org.gbif.cli.PropertyName;
-
 import com.beust.jcommander.Parameter;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import java.util.Properties;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.cli.ConfigUtils;
+import org.gbif.cli.PropertyName;
 import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
 
 /**
- * A configuration class which can be used to get all the details needed to create a writable connection to the
- * GBIF registry.
+ * A configuration class which can be used to get all the details needed to create a writable
+ * connection to the GBIF registry.
  */
 @ToString
 public class RegistryConfiguration {
@@ -34,8 +32,8 @@ public class RegistryConfiguration {
   public String password;
 
   /**
-   * Convenience method to setup a guice injector with a writable registry client module using the configuration
-   * of this instance.
+   * Convenience method to setup a guice injector with a writable registry client module using the
+   * configuration of this instance.
    *
    * @return guice injector with RegistryWsClientModule bound
    */
@@ -47,5 +45,4 @@ public class RegistryConfiguration {
 
     return Guice.createInjector(regModule, authModule);
   }
-
 }

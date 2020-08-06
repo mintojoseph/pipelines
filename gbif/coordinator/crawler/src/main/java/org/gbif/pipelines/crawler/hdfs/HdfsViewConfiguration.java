@@ -1,25 +1,19 @@
 package org.gbif.pipelines.crawler.hdfs;
 
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
-/**
- * Configuration required to start Hdfs View processing
- */
+/** Configuration required to start Hdfs View processing */
 @ToString
 public class HdfsViewConfiguration implements BaseConfiguration {
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
-  public StepConfiguration stepConfig = new StepConfiguration();
+  @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 
   @Parameter(names = "--repository-target-path")
   @NotNull
@@ -125,5 +119,4 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   public String getMetaFileName() {
     return metaFileName;
   }
-
 }

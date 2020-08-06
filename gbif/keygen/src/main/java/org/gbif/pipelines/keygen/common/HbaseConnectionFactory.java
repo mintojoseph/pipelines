@@ -1,10 +1,8 @@
 package org.gbif.pipelines.keygen.common;
 
 import java.util.function.Predicate;
-
-import org.apache.hadoop.hbase.client.Connection;
-
 import lombok.SneakyThrows;
+import org.apache.hadoop.hbase.client.Connection;
 
 public class HbaseConnectionFactory {
 
@@ -18,7 +16,8 @@ public class HbaseConnectionFactory {
   }
 
   public static HbaseConnectionFactory getInstance(String hbaseZk) {
-    Predicate<HbaseConnectionFactory> pr = i -> i == null || i.getConnection() == null || i.getConnection().isClosed();
+    Predicate<HbaseConnectionFactory> pr =
+        i -> i == null || i.getConnection() == null || i.getConnection().isClosed();
     if (pr.test(instance)) {
       synchronized (MUTEX) {
         if (pr.test(instance)) {
@@ -36,5 +35,4 @@ public class HbaseConnectionFactory {
   public Connection getConnection() {
     return connection;
   }
-
 }

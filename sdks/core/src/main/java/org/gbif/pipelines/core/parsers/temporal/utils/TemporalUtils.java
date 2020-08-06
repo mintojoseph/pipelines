@@ -10,7 +10,6 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalUtils {
 
-  public static Optional<Temporal> getTemporal(Year year, Month month, Integer day, LocalTime time, ZoneOffset offset) {
+  public static Optional<Temporal> getTemporal(
+      Year year, Month month, Integer day, LocalTime time, ZoneOffset offset) {
     Temporal result = null;
     if (year != null && month != null && day != null && time != null && offset != null) {
       result = OffsetDateTime.of(LocalDate.of(year.getValue(), month, day), time, offset);
@@ -68,5 +68,4 @@ public class TemporalUtils {
     }
     return Optional.ofNullable(result);
   }
-
 }

@@ -1,23 +1,18 @@
 package org.gbif.pipelines.crawler.balancer;
 
-import org.gbif.common.messaging.config.MessagingConfiguration;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.common.messaging.config.MessagingConfiguration;
 
-/**
- * Configuration required to start Balancer service
- */
+/** Configuration required to start Balancer service */
 @ToString
 public class BalancerConfiguration {
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
+  @ParametersDelegate @Valid @NotNull
   public MessagingConfiguration messaging = new MessagingConfiguration();
 
   @Parameter(names = "--queue-name")
@@ -55,5 +50,4 @@ public class BalancerConfiguration {
   @NotNull
   @Min(1)
   public int switchRecordsNumber;
-
 }

@@ -1,20 +1,18 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
-
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.core.parsers.common.ParsedField;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Parser for the Dwc Terms related to the coordinates. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -50,9 +48,9 @@ class CoordinatesParser {
    * <p>It tries with these fields, in this order, and returns the first successful one:
    *
    * <ol>
-   * <li>{@link DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude}
-   * <li>{@link DwcTerm#verbatimLatitude} and {@link DwcTerm#verbatimLongitude}
-   * <li>{@link DwcTerm#verbatimCoordinates}
+   *   <li>{@link DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude}
+   *   <li>{@link DwcTerm#verbatimLatitude} and {@link DwcTerm#verbatimLongitude}
+   *   <li>{@link DwcTerm#verbatimCoordinates}
    * </ol>
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.

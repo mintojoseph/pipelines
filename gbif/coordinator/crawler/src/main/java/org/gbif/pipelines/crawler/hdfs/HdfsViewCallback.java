@@ -1,9 +1,13 @@
 package org.gbif.pipelines.crawler.hdfs;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
+
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -19,16 +23,7 @@ import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-
-import com.google.common.base.Strings;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-
-/**
- * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
- */
+/** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
@@ -41,8 +36,12 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
 
-  public HdfsViewCallback(HdfsViewConfiguration config, MessagePublisher publisher,
-      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
+  public HdfsViewCallback(
+      HdfsViewConfiguration config,
+      MessagePublisher publisher,
+      CuratorFramework curator,
+      PipelinesHistoryWsClient client,
+      ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
@@ -64,17 +63,16 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         .handleMessage();
   }
 
-  /**
-   * Main message processing logic, creates a terminal java process, which runs
-   */
+  /** Main message processing logic, creates a terminal java process, which runs */
   @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
-        ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
-            .config(config)
-            .message(message)
-            .numberOfShards(computeNumberOfShards(message));
+        ProcessRunnerBuilderBuilder builder =
+            ProcessRunnerBuilder.builder()
+                .config(config)
+                .message(message)
+                .numberOfShards(computeNumberOfShards(message));
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -86,7 +84,8 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
-        throw new IllegalStateException("Failed interpretation on " + message.getDatasetUuid().toString(), ex);
+        throw new IllegalStateException(
+            "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
   }
@@ -94,22 +93,20 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   @Override
   public PipelinesHdfsViewBuiltMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     return new PipelinesHdfsViewBuiltMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        message.getPipelineSteps()
-    );
+        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
   }
 
   /**
-   * Only correct messages can be handled, by now is only messages with the same runner as runner in service config
-   * {@link HdfsViewConfiguration#processRunner}
+   * Only correct messages can be handled, by now is only messages with the same runner as runner in
+   * service config {@link HdfsViewConfiguration#processRunner}
    */
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
     }
-    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
+    if (message.getOnlyForStep() != null
+        && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
       return false;
     }
     return config.processRunner.equals(message.getRunner());
@@ -119,13 +116,15 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     InterpretedToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
+  private void runDistributed(
+      PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
     long recordNumber = getRecordNumber(message);
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordNumber);
 
-    builder.sparkParallelism(computeSparkParallelism(sparkExecutorNumbers))
+    builder
+        .sparkParallelism(computeSparkParallelism(sparkExecutorNumbers))
         .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers))
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
@@ -140,8 +139,8 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Compute the number of thread for spark.default.parallelism, top limit is config.sparkParallelismMax
-   * Remember YARN will create the same number of files
+   * Compute the number of thread for spark.default.parallelism, top limit is
+   * config.sparkParallelismMax Remember YARN will create the same number of files
    */
   private int computeSparkParallelism(int executorNumbers) {
     int count = executorNumbers * config.sparkExecutorCores * 2;
@@ -156,8 +155,8 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and
-   * max is config.sparkExecutorMemoryGbMax
+   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
+   * config.sparkExecutorMemoryGbMax
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
 
@@ -171,12 +170,14 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and
-   * max is config.sparkExecutorNumbersMax
+   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and max is
+   * config.sparkExecutorNumbersMax
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
     int sparkExecutorNumbers =
-        (int) Math.ceil(recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread * 1f));
+        (int)
+            Math.ceil(
+                recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread * 1f));
     if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
       return config.sparkExecutorNumbersMin;
     }
@@ -187,14 +188,15 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains attempted records
-   * count, which is not accurate enough
+   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * attempted records count, which is not accurate enough
    */
   private long getRecordNumber(PipelinesInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
@@ -226,14 +228,17 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     String dirPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
     long sizeByte =
-        HdfsUtils.getFileSizeByte(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, dirPath);
+        HdfsUtils.getFileSizeByte(
+            config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, dirPath);
     if (sizeByte == -1d) {
-      throw new IllegalArgumentException("Please check interpretation source directory! - " + dirPath);
+      throw new IllegalArgumentException(
+          "Please check interpretation source directory! - " + dirPath);
     }
     long sizeExpected = config.hdfsAvroExpectedFileSizeInMb * 1048576L; // 1024 * 1024
     double numberOfShards = (sizeByte * config.hdfsAvroCoefficientRatio / 100f) / sizeExpected;
     double numberOfShardsFloor = Math.floor(numberOfShards);
-    numberOfShards = numberOfShards - numberOfShardsFloor > 0.5d ? numberOfShardsFloor + 1 : numberOfShardsFloor;
+    numberOfShards =
+        numberOfShards - numberOfShardsFloor > 0.5d ? numberOfShardsFloor + 1 : numberOfShardsFloor;
     return numberOfShards <= 0 ? 1 : (int) numberOfShards;
   }
 }

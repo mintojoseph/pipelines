@@ -1,9 +1,8 @@
 package org.gbif.pipelines.ingest.java.utils;
 
-import org.gbif.pipelines.ingest.utils.FsUtils;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 
 @Slf4j
 @SuppressWarnings("all")

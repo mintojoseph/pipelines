@@ -1,10 +1,10 @@
 package org.gbif.pipelines.ingest.options;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 /** Main pipeline options necessary for Elasticsearch index properties */
 public interface EsPipelineOptions extends PipelineOptions {
@@ -31,7 +31,8 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setEsIndexName(String esIndexName);
 
-  @Description("Name of the Elasticsearch aliases. The index created will be added to this aliases.")
+  @Description(
+      "Name of the Elasticsearch aliases. The index created will be added to this aliases.")
   String[] getEsAlias();
 
   void setEsAlias(String[] esAlias);
@@ -42,13 +43,15 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setEsSchemaPath(String esSchemaPath);
 
-  @Description("How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")
+  @Description(
+      "How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")
   @Default.String("40s")
   String getIndexRefreshInterval();
 
   void setIndexRefreshInterval(String indexRefreshInterval);
 
-  @Description("The value of this setting determines the number of primary shards in the target index. The default value is 3.")
+  @Description(
+      "The value of this setting determines the number of primary shards in the target index. The default value is 3.")
   @Default.Integer(3)
   Integer getIndexNumberShards();
 
@@ -84,6 +87,4 @@ public interface EsPipelineOptions extends PipelineOptions {
   String getEsDocumentId();
 
   void setEsDocumentId(String esDocumentId);
-
-
 }

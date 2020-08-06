@@ -1,10 +1,10 @@
 package org.gbif.pipelines.core.parsers.identifier;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 
 public class WikidataValidatorTest {
 
@@ -45,14 +45,28 @@ public class WikidataValidatorTest {
     WikidataValidator validator = new WikidataValidator();
 
     // Should
-    assertEquals("https://www.wikidata.org/wiki/Q12345", validator.normalize("https://www.wikidata.org/wiki/Q12345"));
-    assertEquals("https://www.wikidata.org/wiki/Property:P569", validator.normalize("https://www.wikidata.org/wiki/Property:P569"));
-    assertEquals("https://www.wikidata.org/wiki/Lexeme:L1", validator.normalize("https://www.wikidata.org/wiki/Lexeme:L1"));
-    assertEquals("http://www.wikidata.org/wiki/Lexeme:L1", validator.normalize("http://www.wikidata.org/wiki/Lexeme:L1"));
-    assertEquals("http://www.wikidata.org/wiki/Property:P569", validator.normalize("http://www.wikidata.org/wiki/Property:P569"));
-    assertEquals("http://www.wikidata.org/entity/ID", validator.normalize("http://www.wikidata.org/entity/ID"));
-    assertEquals("wikidata.org/wiki/Property:P569", validator.normalize("wikidata.org/wiki/Property:P569"));
-    assertEquals("www.wikidata.org/wiki/Lexeme:L1", validator.normalize("www.wikidata.org/wiki/Lexeme:L1"));
+    assertEquals(
+        "https://www.wikidata.org/wiki/Q12345",
+        validator.normalize("https://www.wikidata.org/wiki/Q12345"));
+    assertEquals(
+        "https://www.wikidata.org/wiki/Property:P569",
+        validator.normalize("https://www.wikidata.org/wiki/Property:P569"));
+    assertEquals(
+        "https://www.wikidata.org/wiki/Lexeme:L1",
+        validator.normalize("https://www.wikidata.org/wiki/Lexeme:L1"));
+    assertEquals(
+        "http://www.wikidata.org/wiki/Lexeme:L1",
+        validator.normalize("http://www.wikidata.org/wiki/Lexeme:L1"));
+    assertEquals(
+        "http://www.wikidata.org/wiki/Property:P569",
+        validator.normalize("http://www.wikidata.org/wiki/Property:P569"));
+    assertEquals(
+        "http://www.wikidata.org/entity/ID",
+        validator.normalize("http://www.wikidata.org/entity/ID"));
+    assertEquals(
+        "wikidata.org/wiki/Property:P569", validator.normalize("wikidata.org/wiki/Property:P569"));
+    assertEquals(
+        "www.wikidata.org/wiki/Lexeme:L1", validator.normalize("www.wikidata.org/wiki/Lexeme:L1"));
     assertEquals("www.wikidata.org/entity/ID", validator.normalize("www.wikidata.org/entity/ID"));
   }
 
@@ -65,5 +79,4 @@ public class WikidataValidatorTest {
     // Should
     validator.normalize("awdawd");
   }
-
 }

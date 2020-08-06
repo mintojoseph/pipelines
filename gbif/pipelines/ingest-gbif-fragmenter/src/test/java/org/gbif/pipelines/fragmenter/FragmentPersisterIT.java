@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
-
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -20,13 +18,15 @@ import org.junit.runners.MethodSorters;
 public class FragmentPersisterIT {
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule
-  public static final HbaseServer HBASE_SERVER = new HbaseServer();
+  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   private final Path regularDwca = Paths.get(getClass().getResource("/dwca/regular").getFile());
-  private final Path regularZipDwca = Paths.get(getClass().getResource("/dwca/dwca.dwca").getFile());
-  private final Path occurrenceAsExtensionDwca = Paths.get(getClass().getResource("/dwca/occext").getFile());
-  private final Path multimediaExtensionDwca = Paths.get(getClass().getResource("/dwca/multimedia").getFile());
+  private final Path regularZipDwca =
+      Paths.get(getClass().getResource("/dwca/dwca.dwca").getFile());
+  private final Path occurrenceAsExtensionDwca =
+      Paths.get(getClass().getResource("/dwca/occext").getFile());
+  private final Path multimediaExtensionDwca =
+      Paths.get(getClass().getResource("/dwca/multimedia").getFile());
   private final Path xmlArchivePath = Paths.get(getClass().getResource("/xml").getFile());
 
   @Before
@@ -44,22 +44,24 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularZipDwca)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularZipDwca)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -71,22 +73,24 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -98,24 +102,26 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .executor(Executors.newSingleThreadExecutor())
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .executor(Executors.newSingleThreadExecutor())
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .useSyncMode(false)
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -128,37 +134,40 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long resultFirst = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptFirst)
-        .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .executor(Executors.newSingleThreadExecutor())
-        .build()
-        .persist();
+    long resultFirst =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptFirst)
+            .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .executor(Executors.newSingleThreadExecutor())
+            .build()
+            .persist();
 
-    long resultSecond = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptSecond)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long resultSecond =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptSecond)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
@@ -171,40 +180,43 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long resultFirst = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptFirst)
-        .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .executor(Executors.newSingleThreadExecutor())
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long resultFirst =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptFirst)
+            .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .executor(Executors.newSingleThreadExecutor())
+            .useSyncMode(false)
+            .build()
+            .persist();
 
-    long resultSecond = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(regularDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptSecond)
-        .endpointType(endpointType)
-        .batchSize(2)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long resultSecond =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(regularDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptSecond)
+            .endpointType(endpointType)
+            .batchSize(2)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .useSyncMode(false)
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
@@ -216,22 +228,24 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(occurrenceAsExtensionDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(occurrenceAsExtensionDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -243,24 +257,26 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(occurrenceAsExtensionDwca)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .executor(Executors.newSingleThreadExecutor())
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(occurrenceAsExtensionDwca)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .executor(Executors.newSingleThreadExecutor())
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .useSyncMode(false)
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -272,22 +288,24 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(multimediaExtensionDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(multimediaExtensionDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -299,27 +317,28 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentPersister.dwcaBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(multimediaExtensionDwca)
-        .useTriplet(false)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .executor(Executors.newSingleThreadExecutor())
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .useSyncMode(false)
-        .backPressure(5)
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.dwcaBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(multimediaExtensionDwca)
+            .useTriplet(false)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .executor(Executors.newSingleThreadExecutor())
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .useSyncMode(false)
+            .backPressure(5)
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
-
 
   @Test
   public void xmlSyncUploadTest() throws IOException {
@@ -330,22 +349,24 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long result = FragmentPersister.xmlBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(xmlArchivePath)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.xmlBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(xmlArchivePath)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -357,23 +378,25 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long result = FragmentPersister.xmlBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(xmlArchivePath)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attempt)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long result =
+        FragmentPersister.xmlBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(xmlArchivePath)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attempt)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .useSyncMode(false)
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
@@ -386,38 +409,41 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long resultFirst = FragmentPersister.xmlBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(xmlArchivePath)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptFirst)
-        .endpointType(EndpointType.DWC_ARCHIVE)
-        .backPressure(5)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long resultFirst =
+        FragmentPersister.xmlBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(xmlArchivePath)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptFirst)
+            .endpointType(EndpointType.DWC_ARCHIVE)
+            .backPressure(5)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
-    long resultSecond = FragmentPersister.xmlBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(xmlArchivePath)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptSecond)
-        .endpointType(endpointType)
-        .batchSize(1)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .build()
-        .persist();
+    long resultSecond =
+        FragmentPersister.xmlBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(xmlArchivePath)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptSecond)
+            .endpointType(endpointType)
+            .batchSize(1)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
@@ -430,40 +456,43 @@ public class FragmentPersisterIT {
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long resultFirst = FragmentPersister.xmlBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(xmlArchivePath)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptFirst)
-        .endpointType(EndpointType.DWC_ARCHIVE)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .executor(Executors.newSingleThreadExecutor())
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long resultFirst =
+        FragmentPersister.xmlBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(xmlArchivePath)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptFirst)
+            .endpointType(EndpointType.DWC_ARCHIVE)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .executor(Executors.newSingleThreadExecutor())
+            .useSyncMode(false)
+            .build()
+            .persist();
 
-    long resultSecond = FragmentPersister.xmlBuilder()
-        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
-        .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(xmlArchivePath)
-        .useTriplet(true)
-        .useOccurrenceId(true)
-        .datasetKey(datasetKey)
-        .attempt(attemptSecond)
-        .endpointType(endpointType)
-        .hbaseConnection(HBASE_SERVER.getConnection())
-        .backPressure(1)
-        .batchSize(1)
-        .useSyncMode(false)
-        .build()
-        .persist();
+    long resultSecond =
+        FragmentPersister.xmlBuilder()
+            .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+            .keygenConfig(HbaseServer.CFG)
+            .pathToArchive(xmlArchivePath)
+            .useTriplet(true)
+            .useOccurrenceId(true)
+            .datasetKey(datasetKey)
+            .attempt(attemptSecond)
+            .endpointType(endpointType)
+            .hbaseConnection(HBASE_SERVER.getConnection())
+            .backPressure(1)
+            .batchSize(1)
+            .useSyncMode(false)
+            .build()
+            .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 }

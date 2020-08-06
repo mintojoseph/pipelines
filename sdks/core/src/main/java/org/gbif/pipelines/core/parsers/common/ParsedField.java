@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.parsers.common;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
-
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,8 +18,7 @@ public class ParsedField<T> {
 
   private final T result;
 
-  @Builder.Default
-  private final Set<String> issues = new TreeSet<>();
+  @Builder.Default private final Set<String> issues = new TreeSet<>();
 
   private final boolean successful;
 
@@ -47,5 +45,4 @@ public class ParsedField<T> {
   public static <S> ParsedField<S> success(S result) {
     return ParsedField.<S>builder().successful(true).result(result).build();
   }
-
 }

@@ -1,22 +1,19 @@
 package org.gbif.pipelines.ingest.pipelines.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.LongStream;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.elasticsearch.client.Response;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
-
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.elasticsearch.client.Response;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsTestUtils {
@@ -42,35 +39,43 @@ public class EsTestUtils {
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final ObjectReader READER = MAPPER.readerFor(Map.class);
 
-  public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
-      String alias, int attempt) {
-    String propertiesPath = Thread.currentThread().getContextClassLoader().getResource("lock.yaml").getPath();
+  public static EsIndexingPipelineOptions createPipelineOptions(
+      EsServer server, String datasetKey, String idxName, String alias, int attempt) {
+    String propertiesPath =
+        Thread.currentThread().getContextClassLoader().getResource("lock.yaml").getPath();
     String[] args = {
-        "--esIndexName=" + idxName,
-        "--datasetId=" + datasetKey,
-        "--attempt=" + attempt,
-        "--esAlias=" + alias,
-        "--indexRefreshInterval=1ms",
-        "--esHosts=" + server.getServerAddress(),
-        "--esSchemaPath=dataset-mapping.json",
-        "--properties=" + propertiesPath
+      "--esIndexName=" + idxName,
+      "--datasetId=" + datasetKey,
+      "--attempt=" + attempt,
+      "--esAlias=" + alias,
+      "--indexRefreshInterval=1ms",
+      "--esHosts=" + server.getServerAddress(),
+      "--esSchemaPath=dataset-mapping.json",
+      "--properties=" + propertiesPath
     };
     return PipelineOptionsFactory.fromArgs(args).as(EsIndexingPipelineOptions.class);
   }
 
-  public static Runnable indexingPipeline(EsServer server, EsIndexingPipelineOptions options, long numRecordsToIndex,
-      String msg) {
+  public static Runnable indexingPipeline(
+      EsServer server, EsIndexingPipelineOptions options, long numRecordsToIndex, String msg) {
     return () -> {
       String type = "doc";
       String document =
-          "{\"datasetKey\" : \"" + options.getDatasetId() + "\", \"crawlId\" : " + options.getAttempt()
+          "{\"datasetKey\" : \""
+              + options.getDatasetId()
+              + "\", \"crawlId\" : "
+              + options.getAttempt()
               + ", \"msg\": \"%s\"}";
 
       LongStream.range(0, numRecordsToIndex)
           .forEach(
-              i -> EsService.indexDocument(server.getEsClient(), options.getEsIndexName(), type,
-                  i + options.getDatasetId().hashCode(),
-                  String.format(document, msg + " " + i)));
+              i ->
+                  EsService.indexDocument(
+                      server.getEsClient(),
+                      options.getEsIndexName(),
+                      type,
+                      i + options.getDatasetId().hashCode(),
+                      String.format(document, msg + " " + i)));
       EsService.refreshIndex(server.getEsClient(), options.getEsIndexName());
     };
   }
@@ -84,21 +89,30 @@ public class EsTestUtils {
     }
   }
 
-  public static void indexDatasets(EsServer server, List<String> datasets, int attempt, String indexName, String alias,
+  public static void indexDatasets(
+      EsServer server,
+      List<String> datasets,
+      int attempt,
+      String indexName,
+      String alias,
       long recordsPerDataset) {
-    datasets.forEach(dataset -> {
-      EsIndexingPipelineOptions options =
-          createPipelineOptions(server, dataset, Strings.isNullOrEmpty(indexName) ? dataset + "_" + attempt : indexName,
-              alias,
-              attempt);
-      InterpretedToEsIndexExtendedPipeline.run(options,
-          indexingPipeline(server, options, recordsPerDataset, options.getEsIndexName()));
-    });
+    datasets.forEach(
+        dataset -> {
+          EsIndexingPipelineOptions options =
+              createPipelineOptions(
+                  server,
+                  dataset,
+                  Strings.isNullOrEmpty(indexName) ? dataset + "_" + attempt : indexName,
+                  alias,
+                  attempt);
+          InterpretedToEsIndexExtendedPipeline.run(
+              options,
+              indexingPipeline(server, options, recordsPerDataset, options.getEsIndexName()));
+        });
   }
 
-  public static void indexDatasets(EsServer server, List<String> datasets, int attempt, String indexName,
-      String alias) {
+  public static void indexDatasets(
+      EsServer server, List<String> datasets, int attempt, String indexName, String alias) {
     indexDatasets(server, datasets, attempt, indexName, alias, DEFAULT_REC_DATASET);
   }
-
 }

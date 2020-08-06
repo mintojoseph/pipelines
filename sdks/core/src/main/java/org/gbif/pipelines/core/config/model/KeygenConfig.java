@@ -1,8 +1,7 @@
 package org.gbif.pipelines.core.config.model;
 
-import java.io.Serializable;
-
 import com.cloudera.org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

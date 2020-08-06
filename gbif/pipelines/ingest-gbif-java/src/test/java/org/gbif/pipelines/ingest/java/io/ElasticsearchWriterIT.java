@@ -1,5 +1,12 @@
 package org.gbif.pipelines.ingest.java.io;
 
+import static org.elasticsearch.common.xcontent.XContentType.JSON;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
+import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
+import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,28 +16,19 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import org.gbif.pipelines.estools.model.IndexParams;
-import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.io.avro.BasicRecord;
-
 import org.apache.http.client.methods.HttpGet;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RestClient;
+import org.gbif.pipelines.estools.model.IndexParams;
+import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.pipelines.io.avro.BasicRecord;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import static org.elasticsearch.common.xcontent.XContentType.JSON;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
-import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
-import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ElasticsearchWriterIT {
 
@@ -39,12 +37,10 @@ public class ElasticsearchWriterIT {
   private static final Path WRONG_MAPPINGS_PATH = Paths.get("mappings/wrong-mapping.json");
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule
-  public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
   /** {@link Rule} requires this field to be public. */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void cleanIndexes() {
@@ -74,7 +70,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test
@@ -100,7 +97,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test
@@ -126,7 +124,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test
@@ -152,7 +151,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test
@@ -179,7 +179,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test
@@ -206,9 +207,9 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
-
 
   @Test
   public void zeroRecordsSyncBigBatchTest() {
@@ -233,7 +234,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test
@@ -259,7 +261,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   @Test(expected = ElasticsearchException.class)
@@ -285,7 +288,8 @@ public class ElasticsearchWriterIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(
+        basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
   private static List<BasicRecord> generateBrList(int count) {
@@ -305,11 +309,14 @@ public class ElasticsearchWriterIT {
 
   /** Utility method to create an index. */
   private static void createIndex(String idxName, Path mappingPath) {
-    String idx = EsService.createIndex(ES_SERVER.getEsClient(), IndexParams.builder()
-        .indexName(idxName)
-        .settingsType(INDEXING)
-        .pathMappings(mappingPath)
-        .build());
+    String idx =
+        EsService.createIndex(
+            ES_SERVER.getEsClient(),
+            IndexParams.builder()
+                .indexName(idxName)
+                .settingsType(INDEXING)
+                .pathMappings(mappingPath)
+                .build());
     String endpoint = buildEndpoint(idx, "_mapping");
     try {
       RestClient client = ES_SERVER.getRestClient();
@@ -318,5 +325,4 @@ public class ElasticsearchWriterIT {
       throw new AssertionError("Could not get the index mappings", e);
     }
   }
-
 }

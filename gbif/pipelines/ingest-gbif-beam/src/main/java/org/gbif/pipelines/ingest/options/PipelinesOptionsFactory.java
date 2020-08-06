@@ -1,18 +1,15 @@
 package org.gbif.pipelines.ingest.options;
 
+import com.google.common.base.Strings;
 import java.io.File;
 import java.util.Collections;
-
-import org.gbif.pipelines.ingest.utils.FsUtils;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 
 /** Factory parsers arguments or file, registers and produces {@link PipelineOptions} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -30,9 +27,7 @@ public final class PipelinesOptionsFactory {
     return PipelineOptionsFactory.fromArgs(parsedArgs).withValidation().as(clazz);
   }
 
-  /**
-   * Register hdfs configs for options extended {@link InterpretationPipelineOptions}
-   */
+  /** Register hdfs configs for options extended {@link InterpretationPipelineOptions} */
   public static void registerHdfs(InterpretationPipelineOptions options) {
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();

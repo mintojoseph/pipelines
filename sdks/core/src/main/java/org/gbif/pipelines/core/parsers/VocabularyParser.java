@@ -1,10 +1,13 @@
 package org.gbif.pipelines.core.parsers;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -25,11 +28,6 @@ import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 /** Utility class that parses Enum based terms. */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

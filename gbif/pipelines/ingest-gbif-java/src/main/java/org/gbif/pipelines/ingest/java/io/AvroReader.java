@@ -1,5 +1,7 @@
 package org.gbif.pipelines.ingest.java.io;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,10 +9,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.io.avro.Record;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.io.DatumReader;
@@ -20,13 +22,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.io.avro.Record;
 
 /** Avro format reader, reads {@link Record} based objects using sting or {@link List<Path>} path */
 @Slf4j
@@ -68,7 +65,8 @@ public class AvroReader {
    * @param paths list of paths to the files
    */
   @SneakyThrows
-  private static <T extends Record> Map<String, T> readUniqueRecords(FileSystem fs, Class<T> clazz, List<Path> paths) {
+  private static <T extends Record> Map<String, T> readUniqueRecords(
+      FileSystem fs, Class<T> clazz, List<Path> paths) {
 
     Map<String, T> map = new HashMap<>();
     Set<String> duplicateSet = new HashSet<>();
@@ -76,7 +74,8 @@ public class AvroReader {
     for (Path path : paths) {
       // Read avro record from disk/hdfs
       DatumReader<T> reader = new SpecificDatumReader<>(clazz);
-      try (SeekableInput input = new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
+      try (SeekableInput input =
+              new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
           DataFileReader<T> dataFileReader = new DataFileReader<>(input, reader)) {
         while (dataFileReader.hasNext()) {
           T next = dataFileReader.next();
@@ -89,7 +88,6 @@ public class AvroReader {
             duplicateSet.add(next.getId());
             log.warn("occurrenceId = {}, duplicates were found", saved.getId());
           }
-
         }
       }
     }
@@ -104,14 +102,16 @@ public class AvroReader {
    * @param paths list of paths to the files
    */
   @SneakyThrows
-  private static <T extends Record> Map<String, T> readRecords(FileSystem fs, Class<T> clazz, List<Path> paths) {
+  private static <T extends Record> Map<String, T> readRecords(
+      FileSystem fs, Class<T> clazz, List<Path> paths) {
 
     Map<String, T> map = new HashMap<>();
 
     for (Path path : paths) {
       // Deserialize ExtendedRecord from disk
       DatumReader<T> reader = new SpecificDatumReader<>(clazz);
-      try (SeekableInput input = new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
+      try (SeekableInput input =
+              new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
           DataFileReader<T> dataFileReader = new DataFileReader<>(input, reader)) {
         while (dataFileReader.hasNext()) {
           T next = dataFileReader.next();
@@ -141,5 +141,4 @@ public class AvroReader {
     }
     return Collections.singletonList(new Path(path));
   }
-
 }

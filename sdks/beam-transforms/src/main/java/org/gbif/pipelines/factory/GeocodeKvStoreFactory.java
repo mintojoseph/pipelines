@@ -2,7 +2,7 @@ package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-
+import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
@@ -13,8 +13,6 @@ import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-
-import lombok.SneakyThrows;
 
 /** Factory to get singleton instance of {@link KeyValueStore} */
 public class GeocodeKvStoreFactory {

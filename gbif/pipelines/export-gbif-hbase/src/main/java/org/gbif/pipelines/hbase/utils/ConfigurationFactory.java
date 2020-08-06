@@ -1,7 +1,8 @@
 package org.gbif.pipelines.hbase.utils;
 
-import org.gbif.pipelines.hbase.options.ExportHBaseOptions;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -17,10 +18,7 @@ import org.apache.hadoop.hbase.util.Base64;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
+import org.gbif.pipelines.hbase.options.ExportHBaseOptions;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ConfigurationFactory {
@@ -30,7 +28,8 @@ public class ConfigurationFactory {
     Configuration hbaseConf = HBaseConfiguration.create();
     hbaseConf.set(HConstants.ZOOKEEPER_QUORUM, options.getHbaseZk());
     hbaseConf.set("hbase.rootdir", "/hbase");
-    hbaseConf.setClass("mapreduce.job.inputformat.class", TableSnapshotInputFormat.class, InputFormat.class);
+    hbaseConf.setClass(
+        "mapreduce.job.inputformat.class", TableSnapshotInputFormat.class, InputFormat.class);
     hbaseConf.setClass("key.class", ImmutableBytesWritable.class, Writable.class);
     hbaseConf.setClass("value.class", Result.class, Object.class);
 
@@ -45,5 +44,4 @@ public class ConfigurationFactory {
     TableSnapshotInputFormat.setInput(job, options.getTable(), new Path(options.getRestoreDir()));
     return job.getConfiguration(); // extract the modified clone
   }
-
 }

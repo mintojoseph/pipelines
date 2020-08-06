@@ -1,15 +1,14 @@
 package org.gbif.pipelines.crawler.balancer;
 
+import com.google.common.util.concurrent.Service;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
-
 import org.kohsuke.MetaInfServices;
 
-import com.google.common.util.concurrent.Service;
-
 /**
- * Entry class for cli command, to start service to populate and resend messages
- * This command starts a service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesBalancerMessage}
+ * Entry class for cli command, to start service to populate and resend messages This command starts
+ * a service which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesBalancerMessage}
  */
 @MetaInfServices(Command.class)
 public class BalancerCommand extends ServiceCommand {

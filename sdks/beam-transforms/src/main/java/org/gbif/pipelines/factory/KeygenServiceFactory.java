@@ -1,17 +1,14 @@
 package org.gbif.pipelines.factory;
 
 import java.io.IOException;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnection;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
-
-import org.apache.hadoop.hbase.client.Connection;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class KeygenServiceFactory {

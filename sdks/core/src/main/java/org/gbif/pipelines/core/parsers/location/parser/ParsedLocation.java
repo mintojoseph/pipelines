@@ -1,10 +1,9 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.kvs.geocode.LatLng;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.kvs.geocode.LatLng;
 
 /** Models a parsed location. */
 @AllArgsConstructor

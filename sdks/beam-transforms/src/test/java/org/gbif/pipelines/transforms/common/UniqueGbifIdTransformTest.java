@@ -3,15 +3,13 @@ package org.gbif.pipelines.transforms.common;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.gbif.pipelines.io.avro.BasicRecord;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.gbif.pipelines.io.avro.BasicRecord;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,8 +20,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class UniqueGbifIdTransformTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   public void skipTransformTest() {
@@ -118,7 +115,7 @@ public class UniqueGbifIdTransformTest {
   public void allEqualTest() {
     // State
     final List<BasicRecord> input = createCollection("1_1", "1_1", "1_1", "1_1", "1_1", "1_1");
-    final List<BasicRecord> expected= createCollection("1_1");
+    final List<BasicRecord> expected = createCollection("1_1");
 
     // When
     UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
@@ -168,7 +165,6 @@ public class UniqueGbifIdTransformTest {
     p.run();
   }
 
-
   @Test
   public void mixedValuesTest() {
     // State
@@ -190,13 +186,14 @@ public class UniqueGbifIdTransformTest {
 
   private List<BasicRecord> createCollection(String... idName) {
     return Arrays.stream(idName)
-        .map(x -> {
-          String[] array = x.split("_");
-          return BasicRecord.newBuilder()
-              .setId(array[0])
-              .setGbifId(array.length > 1 ? Long.valueOf(array[1]) : null)
-              .build();
-        })
+        .map(
+            x -> {
+              String[] array = x.split("_");
+              return BasicRecord.newBuilder()
+                  .setId(array[0])
+                  .setGbifId(array.length > 1 ? Long.valueOf(array[1]) : null)
+                  .build();
+            })
         .collect(Collectors.toList());
   }
 }

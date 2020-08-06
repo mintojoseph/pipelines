@@ -1,5 +1,8 @@
 package org.gbif.pipelines.transforms.converters;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
+
+import java.io.Serializable;
 import lombok.Builder;
 import lombok.NonNull;
 import org.apache.beam.sdk.metrics.Counter;
@@ -14,10 +17,6 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.*;
-
-import java.io.Serializable;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
 /**
  * Beam level transformation for Occurrence HDFS Downloads Table. The transformation consumes

@@ -1,13 +1,12 @@
 package org.gbif.pipelines.core.config.factory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.function.Function;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

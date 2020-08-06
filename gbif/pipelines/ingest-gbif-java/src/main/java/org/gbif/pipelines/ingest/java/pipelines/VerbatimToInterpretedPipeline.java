@@ -1,5 +1,9 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.gbif.converters.converter.FsUtils.createParentDirectories;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -12,10 +16,17 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
@@ -43,7 +54,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -57,20 +67,7 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
-
-import org.apache.avro.Schema;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.slf4j.MDC;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.converters.converter.FsUtils.createParentDirectories;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
  * Pipeline sequence:
@@ -152,10 +149,12 @@ public class VerbatimToInterpretedPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
     PipelinesConfig config =
-        ConfigFactory.getInstance(hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
+        ConfigFactory.getInstance(
+                hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
             .get();
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -199,30 +198,25 @@ public class VerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn);
 
-    VerbatimTransform verbatimTransform = VerbatimTransform.create()
-        .counterFn(incMetricFn);
+    VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
 
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create()
-        .counterFn(incMetricFn);
+    TaggedValuesTransform taggedValuesTransform =
+        TaggedValuesTransform.builder().create().counterFn(incMetricFn);
 
-    TemporalTransform temporalTransform = TemporalTransform.create()
-        .counterFn(incMetricFn);
+    TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
 
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create()
-        .counterFn(incMetricFn);
+    MeasurementOrFactTransform measurementTransform =
+        MeasurementOrFactTransform.create().counterFn(incMetricFn);
 
-    MultimediaTransform multimediaTransform = MultimediaTransform.create()
-        .counterFn(incMetricFn);
+    MultimediaTransform multimediaTransform = MultimediaTransform.create().counterFn(incMetricFn);
 
-    AudubonTransform audubonTransform = AudubonTransform.create()
-        .counterFn(incMetricFn);
+    AudubonTransform audubonTransform = AudubonTransform.create().counterFn(incMetricFn);
 
-    ImageTransform imageTransform = ImageTransform.create()
-        .counterFn(incMetricFn);
+    ImageTransform imageTransform = ImageTransform.create().counterFn(incMetricFn);
     // Extra
-    OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create()
-        .counterFn(incMetricFn);
+    OccurrenceExtensionTransform occExtensionTransform =
+        OccurrenceExtensionTransform.create().counterFn(incMetricFn);
 
     DefaultValuesTransform defaultValuesTransform =
         DefaultValuesTransform.builder()
@@ -237,8 +231,7 @@ public class VerbatimToInterpretedPipeline {
     metadataTransform.setup();
     defaultValuesTransform.setup();
 
-    try (
-        SyncDataFileWriter<ExtendedRecord> verbatimWriter =
+    try (SyncDataFileWriter<ExtendedRecord> verbatimWriter =
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
             createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
@@ -257,21 +250,24 @@ public class VerbatimToInterpretedPipeline {
         SyncDataFileWriter<AudubonRecord> audubonWriter =
             createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
         SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
+            createWriter(
+                options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
             createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id);
         SyncDataFileWriter<LocationRecord> locationWriter =
-            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id)
-    ) {
+            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id)) {
 
       // Create MetadataRecord
-      MetadataRecord mdr = metadataTransform.processElement(options.getDatasetId())
-          .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
+      MetadataRecord mdr =
+          metadataTransform
+              .processElement(options.getDatasetId())
+              .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
       metadataWriter.append(mdr);
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap =
-          AvroReader.readUniqueRecords(hdfsSiteConfig, coreSiteConfig, ExtendedRecord.class, options.getInputPath());
+          AvroReader.readUniqueRecords(
+              hdfsSiteConfig, coreSiteConfig, ExtendedRecord.class, options.getInputPath());
       Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
       defaultValuesTransform.replaceDefaultValues(erExtMap);
 
@@ -289,51 +285,67 @@ public class VerbatimToInterpretedPipeline {
               .run();
 
       // Create interpretation function
-      Consumer<ExtendedRecord> interpretAllFn = er -> {
-        BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
-        if (br == null) {
-          verbatimWriter.append(er);
-          taggedValuesTransform.processElement(er, mdr).ifPresent(taggedValueWriter::append);
-          temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-          multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-          imageTransform.processElement(er).ifPresent(imageWriter::append);
-          audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-          measurementTransform.processElement(er).ifPresent(measurementWriter::append);
-          taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-          locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
-        } else {
-          basicInvalidWriter.append(br);
-        }
-      };
+      Consumer<ExtendedRecord> interpretAllFn =
+          er -> {
+            BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
+            if (br == null) {
+              verbatimWriter.append(er);
+              taggedValuesTransform.processElement(er, mdr).ifPresent(taggedValueWriter::append);
+              temporalTransform.processElement(er).ifPresent(temporalWriter::append);
+              multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+              imageTransform.processElement(er).ifPresent(imageWriter::append);
+              audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+              measurementTransform.processElement(er).ifPresent(measurementWriter::append);
+              taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+              locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+            } else {
+              basicInvalidWriter.append(br);
+            }
+          };
 
       log.info("Starting interpretation...");
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr;
       Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
       if (useSyncMode) {
-        streamBr = Stream.of(CompletableFuture.runAsync(() -> brCollection.forEach(basicWriter::append), executor));
+        streamBr =
+            Stream.of(
+                CompletableFuture.runAsync(
+                    () -> brCollection.forEach(basicWriter::append), executor));
       } else {
-        streamBr = brCollection.stream().map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
+        streamBr =
+            brCollection.stream()
+                .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
       }
 
       // Run async interpretation and writing for all records
       Stream<CompletableFuture<Void>> streamAll;
       Collection<ExtendedRecord> erCollection = erExtMap.values();
       if (useSyncMode) {
-        streamAll = Stream.of(CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
+        streamAll =
+            Stream.of(
+                CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
       } else {
-        streamAll = erCollection.stream().map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
+        streamAll =
+            erCollection.stream()
+                .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
       }
 
       // Wait for all features
-      CompletableFuture[] futures = Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
+      CompletableFuture[] futures =
+          Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform, defaultValuesTransform);
+      Shutdown.doOnExit(
+          metadataTransform,
+          basicTransform,
+          locationTransform,
+          taxonomyTransform,
+          defaultValuesTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -342,12 +354,18 @@ public class VerbatimToInterpretedPipeline {
 
   /** Create an AVRO file writer */
   @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
-      Transform transform, String id, boolean useInvalidName) {
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
+  private static <T> SyncDataFileWriter<T> createWriter(
+      InterpretationPipelineOptions options,
+      Schema schema,
+      Transform transform,
+      String id,
+      boolean useInvalidName) {
+    UnaryOperator<String> pathFn =
+        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     Path path = new Path(pathFn.apply(baseName));
-    FileSystem fs = createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
+    FileSystem fs =
+        createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(schema)
         .codec(options.getAvroCompressionType())
@@ -357,8 +375,8 @@ public class VerbatimToInterpretedPipeline {
         .createSyncDataFileWriter();
   }
 
-  private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
-      Transform transform, String id) {
+  private static <T> SyncDataFileWriter<T> createWriter(
+      InterpretationPipelineOptions options, Schema schema, Transform transform, String id) {
     return createWriter(options, schema, transform, id, false);
   }
 
@@ -375,15 +393,16 @@ public class VerbatimToInterpretedPipeline {
         LocationTransform lTr,
         TaxonomyTransform tTr,
         DefaultValuesTransform dTr) {
-      Runnable shudownHook = () -> {
-        log.info("Closing all resources");
-        mdTr.tearDown();
-        bTr.tearDown();
-        lTr.tearDown();
-        tTr.tearDown();
-        dTr.tearDown();
-        log.info("The resources were closed");
-      };
+      Runnable shudownHook =
+          () -> {
+            log.info("Closing all resources");
+            mdTr.tearDown();
+            bTr.tearDown();
+            lTr.tearDown();
+            tTr.tearDown();
+            dTr.tearDown();
+            log.info("The resources were closed");
+          };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
@@ -402,5 +421,4 @@ public class VerbatimToInterpretedPipeline {
       }
     }
   }
-
 }

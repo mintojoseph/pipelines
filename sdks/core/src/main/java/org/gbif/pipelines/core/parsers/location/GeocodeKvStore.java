@@ -3,14 +3,12 @@ package org.gbif.pipelines.core.parsers.location;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.Serializable;
-
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.location.cache.GeocodeBitmapCache;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, Serializable {
@@ -20,12 +18,14 @@ public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, S
   private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
   private final GeocodeBitmapCache bitmapCache;
 
-  private GeocodeKvStore(@NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+  private GeocodeKvStore(
+      @NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
     this.kvStore = kvStore;
     this.bitmapCache = image == null ? null : GeocodeBitmapCache.create(image, kvStore::get);
   }
 
-  public static GeocodeKvStore create(KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+  public static GeocodeKvStore create(
+      KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
     return new GeocodeKvStore(kvStore, image);
   }
 
@@ -61,5 +61,4 @@ public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, S
       }
     }
   }
-
 }

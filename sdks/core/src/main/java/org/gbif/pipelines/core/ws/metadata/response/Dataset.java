@@ -1,15 +1,13 @@
 package org.gbif.pipelines.core.ws.metadata.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.List;
-
-import org.gbif.api.model.registry.MachineTag;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gbif.api.model.registry.MachineTag;
 
 /** Can be a org.gbif.api.model.registry.Dataset model, some problem with enum unmarshalling */
 @Getter
@@ -29,5 +27,4 @@ public class Dataset implements Serializable {
   private String title;
   private Project project;
   private List<MachineTag> machineTags;
-
 }

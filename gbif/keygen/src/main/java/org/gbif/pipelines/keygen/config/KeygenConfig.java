@@ -1,7 +1,6 @@
 package org.gbif.pipelines.keygen.config;
 
 import java.io.Serializable;
-
 import lombok.Builder;
 import lombok.Data;
 

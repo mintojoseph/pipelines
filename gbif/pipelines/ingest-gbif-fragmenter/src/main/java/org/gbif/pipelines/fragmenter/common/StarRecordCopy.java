@@ -6,16 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.Term;
-
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Helps to avoid the issue with StarRecordImpl iterator which returns the same object pointer
- */
+/** Helps to avoid the issue with StarRecordImpl iterator which returns the same object pointer */
 public class StarRecordCopy implements StarRecord {
 
   private final Record core;

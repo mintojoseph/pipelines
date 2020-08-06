@@ -1,17 +1,16 @@
 package org.gbif.pipelines.core.parsers.identifier;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.gbif.datarepo.api.validation.identifierschemes.IdentifierSchemeValidator;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.gbif.datarepo.api.validation.identifierschemes.IdentifierSchemeValidator;
 
 public class WikidataValidator implements IdentifierSchemeValidator {
 
   private static final Pattern WIKIDATA_PATTERN =
-      Pattern.compile("^(?<scheme>(http(?:s)?:\\/\\/)?(www\\.))?(wikidata\\.org\\/\\w+\\/\\w+(?:\\:\\w+)?)$");
+      Pattern.compile(
+          "^(?<scheme>(http(?:s)?:\\/\\/)?(www\\.))?(wikidata\\.org\\/\\w+\\/\\w+(?:\\:\\w+)?)$");
 
   @Override
   public boolean isValid(String value) {

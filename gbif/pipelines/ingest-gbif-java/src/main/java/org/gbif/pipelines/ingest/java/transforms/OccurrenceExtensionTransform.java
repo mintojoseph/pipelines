@@ -3,11 +3,9 @@ package org.gbif.pipelines.ingest.java.transforms;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-
+import lombok.NoArgsConstructor;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
-
-import lombok.NoArgsConstructor;
 
 /**
  * Java level transformation for sampling event where occurrence records stored in extensions
@@ -29,16 +27,15 @@ public class OccurrenceExtensionTransform {
 
     Map<String, ExtendedRecord> result = new HashMap<>();
 
-    Consumer<ExtendedRecord> consumer = r -> {
-      if (r != null && r.getId() != null && !r.getId().isEmpty()) {
-        result.put(r.getId(), r);
-      }
-    };
+    Consumer<ExtendedRecord> consumer =
+        r -> {
+          if (r != null && r.getId() != null && !r.getId().isEmpty()) {
+            result.put(r.getId(), r);
+          }
+        };
 
     erMap.values().forEach(er -> transform.convert(er, consumer));
 
     return result;
-
   }
-
 }

@@ -1,18 +1,17 @@
 package org.gbif.pipelines.core.parsers.location.cache;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
-
 import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
 
 /** A cache which uses a bitmap to cache coordinate lookups. */
 @Slf4j
@@ -37,15 +36,14 @@ public class GeocodeBitmapCache {
   }
 
   public static GeocodeBitmapCache create(
-    @NonNull BufferedImage img, @NonNull Function<LatLng, GeocodeResponse> loadFn) {
+      @NonNull BufferedImage img, @NonNull Function<LatLng, GeocodeResponse> loadFn) {
     return new GeocodeBitmapCache(img, loadFn);
   }
 
   /**
-   * Check the colour of a pixel from the map image to determine the country.
-   * <br/>
-   * Other than the special cases, the colours are looked up using the web service the first
-   * time they are found.
+   * Check the colour of a pixel from the map image to determine the country. <br>
+   * Other than the special cases, the colours are looked up using the web service the first time
+   * they are found.
    *
    * @return Locations or null if the bitmap can't answer.
    */
@@ -87,11 +85,22 @@ public class GeocodeBitmapCache {
     locations = loadFn.apply(LatLng.builder().withLatitude(lat).withLongitude(lng).build());
     // Don't store this if there aren't any locations.
     if (locations.getLocations().isEmpty()) {
-      log.error("For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.",
-          hex, lat, lng, x, y);
+      log.error(
+          "For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.",
+          hex,
+          lat,
+          lng,
+          x,
+          y);
     } else {
-      log.info("New colour {} (LL {},{}; pixel {},{}); remembering as {}",
-          hex, lat, lng, x, y, joinLocations(locations));
+      log.info(
+          "New colour {} (LL {},{}; pixel {},{}); remembering as {}",
+          hex,
+          lat,
+          lng,
+          x,
+          y,
+          joinLocations(locations));
       colourKey.put(colour, locations);
     }
 

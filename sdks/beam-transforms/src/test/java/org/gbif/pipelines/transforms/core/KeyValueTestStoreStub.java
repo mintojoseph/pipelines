@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.core;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.gbif.kvs.KeyValueStore;
 
 public class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {
@@ -24,4 +23,3 @@ public class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Seriali
     map.put(key, value);
   }
 }
-

@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
+import java.util.Objects;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.kvs.KeyValueStore;
@@ -8,9 +10,6 @@ import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
-
-import java.util.Objects;
-import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GadmParser {

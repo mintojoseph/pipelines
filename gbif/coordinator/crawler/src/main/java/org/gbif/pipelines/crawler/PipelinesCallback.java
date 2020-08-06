@@ -1,5 +1,12 @@
 package org.gbif.pipelines.crawler;
 
+import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+
+import com.google.common.annotations.VisibleForTesting;
+import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
@@ -8,7 +15,12 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
@@ -31,27 +43,13 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
-import com.google.common.annotations.VisibleForTesting;
-import io.github.resilience4j.retry.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-
 /**
- * Common class for building and handling a pipeline step. Contains {@link Builder} to simplify the creation process
- * and main handling process. Please see the main method {@link PipelinesCallback#handleMessage}
+ * Common class for building and handling a pipeline step. Contains {@link Builder} to simplify the
+ * creation process and main handling process. Please see the main method {@link
+ * PipelinesCallback#handleMessage}
  */
 @Slf4j
 @Builder
@@ -64,23 +62,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           RetryConfig.custom()
               .maxAttempts(3)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
-              .build()
-      );
+              .build());
 
   private static Properties properties;
   private final MessagePublisher publisher;
-  @NonNull
-  private final StepType stepType;
-  @NonNull
-  private final CuratorFramework curator;
-  @NonNull
-  private final PipelinesHistoryWsClient client;
-  @NonNull
-  private final BaseConfiguration config;
-  @NonNull
-  private final I message;
-  @NonNull
-  private final StepHandler<I, O> handler;
+  @NonNull private final StepType stepType;
+  @NonNull private final CuratorFramework curator;
+  @NonNull private final PipelinesHistoryWsClient client;
+  @NonNull private final BaseConfiguration config;
+  @NonNull private final I message;
+  @NonNull private final StepHandler<I, O> handler;
 
   static {
     try {
@@ -92,16 +83,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   /**
    * The main process handling:
-   * <p>
-   * 1) Receives a MQ message
-   * 2) Updates Zookeeper start date monitoring metrics
-   * 3) Create pipeline step in tracking service
-   * 4) Runs runnable function, which is the main message processing logic
-   * 5) Updates Zookeeper end date monitoring metrics
-   * 6) Update status in tracking service
-   * 7) Sends a wrapped message to Balancer microservice
-   * 8) Updates Zookeeper successful or error monitoring metrics
-   * 9) Cleans Zookeeper monitoring metrics if the received message is the last
+   *
+   * <p>1) Receives a MQ message 2) Updates Zookeeper start date monitoring metrics 3) Create
+   * pipeline step in tracking service 4) Runs runnable function, which is the main message
+   * processing logic 5) Updates Zookeeper end date monitoring metrics 6) Update status in tracking
+   * service 7) Sends a wrapped message to Balancer microservice 8) Updates Zookeeper successful or
+   * error monitoring metrics 9) Cleans Zookeeper monitoring metrics if the received message is the
+   * last
    */
   public void handleMessage() {
 
@@ -114,14 +102,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
 
       if (!handler.isMessageCorrect(message)) {
-        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+        log.info(
+            "Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
       }
 
       log.info("Message handler began - {}", message);
       Runnable runnable = handler.createRunnable(message);
 
-      // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
+      // Message callback handler, updates zookeeper info, runs process logic and sends next MQ
+      // message
       // Short variables
       Set<String> steps = message.getPipelineSteps();
 
@@ -131,15 +121,19 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       }
 
       log.info("Message has been received {}", message);
-      if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(datasetKey, stepType.getLabel()))) {
-        log.error("Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}", datasetKey);
+      if (ZookeeperUtils.checkExists(
+          curator, getPipelinesInfoPath(datasetKey, stepType.getLabel()))) {
+        log.error(
+            "Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}",
+            datasetKey);
         return;
       }
 
       // track the pipeline step
       trackingInfo = trackPipelineStep();
 
-      String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(message.getDatasetUuid(), PROCESS_STATE_OCCURRENCE);
+      String crawlerZkPath =
+          CrawlerNodePaths.getCrawlInfoPath(message.getDatasetUuid(), PROCESS_STATE_OCCURRENCE);
       if (ZookeeperUtils.checkExists(curator, crawlerZkPath)) {
         ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "RUNNING");
       }
@@ -148,7 +142,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       ZookeeperUtils.updateMonitoring(curator, datasetKey, mqMessageZkPath, message.toString());
 
       String mqClassNameZkPath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqClassNameZkPath, message.getClass().getCanonicalName());
+      ZookeeperUtils.updateMonitoring(
+          curator, datasetKey, mqClassNameZkPath, message.getClass().getCanonicalName());
 
       String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath);
@@ -169,7 +164,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // Send a wrapped outgoing message to Balancer queue
       if (outgoingMessage != null) {
         String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
-        ZookeeperUtils.updateMonitoring(curator, datasetKey, successfulPath, Boolean.TRUE.toString());
+        ZookeeperUtils.updateMonitoring(
+            curator, datasetKey, successfulPath, Boolean.TRUE.toString());
 
         // set the executionId
         trackingInfo.ifPresent(info -> outgoingMessage.setExecutionId(info.executionId));
@@ -203,12 +199,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
 
     log.info("Message handler ended - {}", message);
-
   }
 
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
-      // create pipeline process. If it already exists it returns the existing one (the db query does an upsert).
+      // create pipeline process. If it already exists it returns the existing one (the db query
+      // does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
       Integer attempt = message.getAttempt();
       long processKey = client.createOrGetPipelineProcess(datasetUuid, attempt);
@@ -216,7 +212,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Long executionId = message.getExecutionId();
       if (executionId == null) {
         // create execution
-        PipelineExecution execution = new PipelineExecution().setStepsToRun(Collections.singletonList(stepType));
+        PipelineExecution execution =
+            new PipelineExecution().setStepsToRun(Collections.singletonList(stepType));
 
         executionId = client.addPipelineExecution(processKey, execution);
         message.setExecutionId(executionId);
@@ -234,7 +231,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       long stepKey = client.addPipelineStep(processKey, executionId, step);
 
       return Optional.of(
-          new TrackingInfo(processKey, executionId, stepKey, datasetUuid.toString(), attempt.toString()));
+          new TrackingInfo(
+              processKey, executionId, stepKey, datasetUuid.toString(), attempt.toString()));
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
       log.error("Couldn't track pipeline step for message {}", message, ex);
@@ -244,16 +242,25 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
     String path =
-        HdfsUtils.buildOutputPathAsString(config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
+        HdfsUtils.buildOutputPathAsString(
+            config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
     List<MetricInfo> metricInfos =
-        HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path);
+        HdfsUtils.readMetricsFromMetaFile(
+            config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path);
     PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
     try {
-      Runnable r = () -> client.updatePipelineStepStatusAndMetrics(ti.processKey, ti.executionId, ti.stepKey, psp);
+      Runnable r =
+          () ->
+              client.updatePipelineStepStatusAndMetrics(
+                  ti.processKey, ti.executionId, ti.stepKey, psp);
       Retry.decorateRunnable(RETRY, r).run();
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
-      log.error("Couldn't update tracking status for process {} and step {}", ti.processKey, ti.stepKey, ex);
+      log.error(
+          "Couldn't update tracking status for process {} and step {}",
+          ti.processKey,
+          ti.stepKey,
+          ex);
     }
   }
 
@@ -288,7 +295,5 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     long stepKey;
     String datasetId;
     String attempt;
-
   }
-
 }

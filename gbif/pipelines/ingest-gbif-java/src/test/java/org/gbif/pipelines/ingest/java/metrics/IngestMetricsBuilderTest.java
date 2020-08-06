@@ -1,12 +1,5 @@
 package org.gbif.pipelines.ingest.java.metrics;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.beam.sdk.metrics.MetricResults;
-import org.junit.Assert;
-import org.junit.Test;
-
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
@@ -27,6 +20,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECORDS_COUNT;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.beam.sdk.metrics.MetricResults;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class IngestMetricsBuilderTest {
 
@@ -60,8 +59,11 @@ public class IngestMetricsBuilderTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
-    
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+
     Assert.assertEquals(18, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(BASIC_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(LOCATION_RECORDS_COUNT));
@@ -96,7 +98,10 @@ public class IngestMetricsBuilderTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_JSON_COUNT));
@@ -115,10 +120,12 @@ public class IngestMetricsBuilderTest {
 
     // Should
     Map<String, Long> map = new HashMap<>();
-    result.allMetrics().getCounters().forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
+    result
+        .allMetrics()
+        .getCounters()
+        .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
     Assert.assertEquals(1, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(AVRO_TO_HDFS_COUNT));
   }
-
 }

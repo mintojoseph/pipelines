@@ -6,18 +6,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @AllArgsConstructor(staticName = "create")
@@ -30,8 +27,7 @@ public class DwcaOccurrenceRecord implements OccurrenceRecord {
     MAPPER.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true);
   }
 
-  @NonNull
-  private final StarRecord starRecord;
+  @NonNull private final StarRecord starRecord;
 
   @Override
   public String getInstitutionCode() {
@@ -66,7 +62,8 @@ public class DwcaOccurrenceRecord implements OccurrenceRecord {
     }
 
     if (!starRecord.extensions().isEmpty()) {
-      Map<Term, List<Map<String, String>>> extensions = new TreeMap<>(Comparator.comparing(Term::qualifiedName));
+      Map<Term, List<Map<String, String>>> extensions =
+          new TreeMap<>(Comparator.comparing(Term::qualifiedName));
       data.put("extensions", extensions);
 
       // iterate over extensions

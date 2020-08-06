@@ -7,14 +7,6 @@ import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -22,6 +14,12 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,8 +30,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class TemporalRecordTransformTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   private static class CleanDateCreate extends DoFn<TemporalRecord, TemporalRecord> {
 
@@ -64,10 +61,10 @@ public class TemporalRecordTransformTest {
     final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
 
     // When
-    PCollection<TemporalRecord> dataStream = p
-        .apply(Create.of(input))
-        .apply(TemporalTransform.create().interpret())
-        .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
@@ -81,10 +78,10 @@ public class TemporalRecordTransformTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
     // When
-    PCollection<TemporalRecord> dataStream = p
-        .apply(Create.of(er))
-        .apply(TemporalTransform.create().interpret())
-        .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(er))
+            .apply(TemporalTransform.create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
     PAssert.that(dataStream).empty();

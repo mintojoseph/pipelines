@@ -1,5 +1,6 @@
 package org.gbif.pipelines.common.utils;
 
+import com.google.common.base.Strings;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,24 +13,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
-
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Utils help to work with HDFS files
- */
+/** Utils help to work with HDFS files */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HdfsUtils {
@@ -41,7 +36,8 @@ public class HdfsUtils {
    * @param coreSiteConfig path to core-site.xml config file
    * @param filePath path to some file
    */
-  public static long getFileSizeByte(String hdfsSiteConfig, String coreSiteConfig, String filePath) throws IOException {
+  public static long getFileSizeByte(String hdfsSiteConfig, String coreSiteConfig, String filePath)
+      throws IOException {
     URI fileUri = URI.create(filePath);
     FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path path = new Path(fileUri);
@@ -99,9 +95,7 @@ public class HdfsUtils {
     if (fs.exists(fsPath)) {
       FileStatus[] statuses = fs.listStatus(fsPath);
       if (statuses != null && statuses.length > 0) {
-        return Arrays.stream(statuses)
-            .filter(FileStatus::isDirectory)
-            .collect(Collectors.toList());
+        return Arrays.stream(statuses).filter(FileStatus::isDirectory).collect(Collectors.toList());
       }
     }
     return Collections.emptyList();
@@ -160,9 +154,7 @@ public class HdfsUtils {
     return new ArrayList<>();
   }
 
-  /**
-   * Store an Avro file on HDFS in /data/ingest/<datasetUUID>/<attemptID>/verbatim.avro
-   */
+  /** Store an Avro file on HDFS in /data/ingest/<datasetUUID>/<attemptID>/verbatim.avro */
   public static Path buildOutputPath(String... values) {
     StringJoiner joiner = new StringJoiner(org.apache.hadoop.fs.Path.SEPARATOR);
     Arrays.stream(values).forEach(joiner::add);
@@ -197,12 +189,16 @@ public class HdfsUtils {
       throws IOException {
     LocalDateTime date = LocalDateTime.now().minusDays(deleteAfterDays);
     getSubDirList(hdfsSiteConfig, coreSiteConfig, filePath).stream()
-        .filter(x -> LocalDateTime.ofEpochSecond(x.getModificationTime(), 0, ZoneOffset.UTC).isBefore(date))
+        .filter(
+            x ->
+                LocalDateTime.ofEpochSecond(x.getModificationTime(), 0, ZoneOffset.UTC)
+                    .isBefore(date))
         .map(y -> y.getPath().getName())
         .forEach(z -> deleteDirectory(hdfsSiteConfig, coreSiteConfig, z));
   }
 
-  private static FileSystem getFileSystem(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+  private static FileSystem getFileSystem(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath) {
     return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(filePath);
   }
 }

@@ -6,22 +6,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-
 /**
- * Splits collection into two:
- * 1 - normal collection with regular GBIF ids
- * 2 - contains invalid records with GBIF ids, as duplicates or missed GBIF ids
+ * Splits collection into two: 1 - normal collection with regular GBIF ids 2 - contains invalid
+ * records with GBIF ids, as duplicates or missed GBIF ids
  */
 @Slf4j
 @Getter
@@ -31,20 +28,15 @@ public class UniqueGbifIdTransform {
   private final Map<String, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
 
-  @NonNull
-  private BasicTransform basicTransform;
+  @NonNull private BasicTransform basicTransform;
 
-  @NonNull
-  private Map<String, ExtendedRecord> erMap;
+  @NonNull private Map<String, ExtendedRecord> erMap;
 
-  @Builder.Default
-  private ExecutorService executor = Executors.newWorkStealingPool();
+  @Builder.Default private ExecutorService executor = Executors.newWorkStealingPool();
 
-  @Builder.Default
-  private boolean useSyncMode = true;
+  @Builder.Default private boolean useSyncMode = true;
 
-  @Builder.Default
-  private boolean skipTransform = false;
+  @Builder.Default private boolean skipTransform = false;
 
   public UniqueGbifIdTransform run() {
     return useSyncMode ? runSync() : runAsync();
@@ -56,10 +48,10 @@ public class UniqueGbifIdTransform {
     Consumer<ExtendedRecord> interpretBrFn = filterByGbifId();
 
     // Run async
-    CompletableFuture[] brFutures = erMap.values()
-        .stream()
-        .map(v -> CompletableFuture.runAsync(() -> interpretBrFn.accept(v), executor))
-        .toArray(CompletableFuture[]::new);
+    CompletableFuture[] brFutures =
+        erMap.values().stream()
+            .map(v -> CompletableFuture.runAsync(() -> interpretBrFn.accept(v), executor))
+            .toArray(CompletableFuture[]::new);
     CompletableFuture.allOf(brFutures).get();
 
     return this;
@@ -75,17 +67,19 @@ public class UniqueGbifIdTransform {
   /** Process GBIF id duplicates */
   private Consumer<ExtendedRecord> filterByGbifId() {
     return er ->
-        basicTransform.processElement(er)
-            .ifPresent(br -> {
-              if (skipTransform) {
-                brMap.put(br.getId(), br);
-              } else if (br.getGbifId() != null) {
-                filter(br);
-              } else {
-                brInvalidMap.put(br.getId(), br);
-                log.error("GBIF ID is null, occurrenceId - {}", br.getId());
-              }
-            });
+        basicTransform
+            .processElement(er)
+            .ifPresent(
+                br -> {
+                  if (skipTransform) {
+                    brMap.put(br.getId(), br);
+                  } else if (br.getGbifId() != null) {
+                    filter(br);
+                  } else {
+                    brInvalidMap.put(br.getId(), br);
+                    log.error("GBIF ID is null, occurrenceId - {}", br.getId());
+                  }
+                });
   }
 
   /** Filter GBIF id duplicates if it is exist */
@@ -104,5 +98,4 @@ public class UniqueGbifIdTransform {
       brMap.put(br.getGbifId().toString(), br);
     }
   }
-
 }

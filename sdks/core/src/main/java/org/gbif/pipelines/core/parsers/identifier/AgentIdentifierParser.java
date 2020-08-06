@@ -1,18 +1,16 @@
 package org.gbif.pipelines.core.parsers.identifier;
 
+import com.google.common.base.Strings;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.datarepo.api.validation.identifierschemes.OrcidValidator;
 import org.gbif.datarepo.api.validation.identifierschemes.OtherValidator;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AgentIdentifierParser {
@@ -51,5 +49,4 @@ public class AgentIdentifierParser {
         .setValue(OTHER_VALIDATOR.normalize(raw))
         .build();
   }
-
 }

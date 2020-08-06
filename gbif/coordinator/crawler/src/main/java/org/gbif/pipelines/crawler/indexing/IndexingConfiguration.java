@@ -1,25 +1,19 @@
 package org.gbif.pipelines.crawler.indexing;
 
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
-/**
- * Configuration required to start Indexing Pipeline on provided dataset
- */
+/** Configuration required to start Indexing Pipeline on provided dataset */
 @ToString
 public class IndexingConfiguration implements BaseConfiguration {
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
-  public StepConfiguration stepConfig = new StepConfiguration();
+  @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.INTERPRETED_TO_INDEX + ".yml";
@@ -161,5 +155,4 @@ public class IndexingConfiguration implements BaseConfiguration {
   public String getMetaFileName() {
     return metaFileName;
   }
-
 }

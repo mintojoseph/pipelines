@@ -3,7 +3,6 @@ package org.gbif.pipelines.keygen.common;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.Assert;
 import org.junit.Test;
@@ -99,5 +98,4 @@ public class HbaseConnectionFactoryIT {
     // Post action
     conn3.close();
   }
-
 }

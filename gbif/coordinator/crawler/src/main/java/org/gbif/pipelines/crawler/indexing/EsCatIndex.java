@@ -1,8 +1,7 @@
 package org.gbif.pipelines.crawler.indexing;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 

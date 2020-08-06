@@ -4,14 +4,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,8 +21,7 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class CheckTransformsTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   public void checkRecordTypeAllValueTest() {
@@ -124,6 +121,4 @@ public class CheckTransformsTest {
     PAssert.that(apply).empty();
     p.run();
   }
-
-
 }

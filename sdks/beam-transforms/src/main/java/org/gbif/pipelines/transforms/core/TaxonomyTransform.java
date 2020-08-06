@@ -1,10 +1,17 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -16,21 +23,11 @@ import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
-
 /**
- * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
- * transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
- * <p>
- * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
+ * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to
+ * keyValue and transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
+ *
+ * <p>ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
  * a source and {@link TaxonomyInterpreter} as interpretation steps
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
@@ -38,7 +35,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+      kvStoreSupplier;
   private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
   @Builder(buildMethodName = "create")

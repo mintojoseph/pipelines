@@ -1,11 +1,9 @@
 package org.gbif.pipelines.core.ws.metadata;
 
 import java.util.List;
-
 import org.gbif.pipelines.core.ws.metadata.response.Dataset;
 import org.gbif.pipelines.core.ws.metadata.response.Network;
 import org.gbif.pipelines.core.ws.metadata.response.Organization;
-
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;

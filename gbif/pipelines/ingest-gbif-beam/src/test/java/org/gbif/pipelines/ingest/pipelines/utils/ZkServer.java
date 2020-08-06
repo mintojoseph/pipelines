@@ -1,24 +1,20 @@
 package org.gbif.pipelines.ingest.pipelines.utils;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.Properties;
-
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
-
-import org.apache.curator.test.TestingServer;
-import org.junit.rules.ExternalResource;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.test.TestingServer;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.junit.rules.ExternalResource;
 
 /**
  * ZK server for testing purposes.
@@ -52,10 +48,12 @@ public class ZkServer extends ExternalResource {
   private void updateLockProperties() throws IOException, URISyntaxException {
     // create props
     PipelinesConfig config;
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory().disable(Feature.WRITE_DOC_START_MARKER));
+    ObjectMapper mapper =
+        new ObjectMapper(new YAMLFactory().disable(Feature.WRITE_DOC_START_MARKER));
     mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
     mapper.findAndRegisterModules();
-    try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(LOCK_PROPERTIES_PATH)) {
+    try (InputStream in =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(LOCK_PROPERTIES_PATH)) {
       config = mapper.readValue(in, PipelinesConfig.class);
       // update properties file with connection string
       config.getIndexLock().setZkConnectionString(zkServer.getConnectString());

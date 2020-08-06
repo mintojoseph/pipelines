@@ -1,21 +1,18 @@
 package org.gbif.pipelines.fragmenter.record;
 
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.gbif.dwc.record.Record;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-
-import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 
 @Slf4j
 @AllArgsConstructor(staticName = "create")
@@ -28,11 +25,9 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
     MAPPER.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true);
   }
 
-  @NonNull
-  private final Record core;
+  @NonNull private final Record core;
 
-  @NonNull
-  private final Record occurrenceExtension;
+  @NonNull private final Record occurrenceExtension;
 
   @Override
   public String getInstitutionCode() {
@@ -68,7 +63,8 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
 
     // overlay them with extension occ terms
     for (Term term : occurrenceExtension.terms()) {
-      // do not overwrite values with a NULL.  It can be the case that e.g. Taxon core has values, while the extension
+      // do not overwrite values with a NULL.  It can be the case that e.g. Taxon core has values,
+      // while the extension
       // declares the same terms, but provides no value.
       if (!StringUtils.isBlank(occurrenceExtension.value(term))) {
         data.put(term.simpleName(), occurrenceExtension.value(term));
@@ -91,5 +87,4 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
     }
     return value;
   }
-
 }

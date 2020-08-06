@@ -1,13 +1,22 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTED;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTION_FAILED;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTION_SUSPICIOUS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
+import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_INVALID;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.util.Set;
 import java.util.TreeSet;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DatumParser;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-
 import org.geotools.factory.BasicFactories;
 import org.geotools.factory.FactoryRegistryException;
 import org.geotools.referencing.CRS;
@@ -18,18 +27,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.DatumAuthorityFactory;
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.MathTransform;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTED;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTION_FAILED;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTION_SUSPICIOUS;
-import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
-import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_INVALID;
 
 /** Utils class that reprojects to WGS84 based on geotools transformations and SRS databases. */
 @Slf4j
@@ -105,7 +102,13 @@ public class Wgs84Projection {
         return ParsedField.success(new LatLng(lat2, lon2), issues);
       }
     } catch (Exception ex) {
-      log.warn("Coordinate re-projection failed for datum {}, lat {} and lon {}: {}", datum, lat, lon, ex.getMessage(), ex);
+      log.warn(
+          "Coordinate re-projection failed for datum {}, lat {} and lon {}: {}",
+          datum,
+          lat,
+          lon,
+          ex.getMessage(),
+          ex);
       issues.add(COORDINATE_REPROJECTION_FAILED.name());
     }
 

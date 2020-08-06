@@ -2,14 +2,6 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.util.Collections;
 import java.util.Map;
-
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.transforms.ExtendedRecordCustomBuilder;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -17,6 +9,12 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.transforms.ExtendedRecordCustomBuilder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -28,16 +26,17 @@ import org.junit.runners.JUnit4;
 public class MultimediaRecordTransformTest {
 
   private static final String RECORD_ID = "123";
-  private static final String URI = "http://specify-attachments-saiab.saiab.ac.za/originals/att.JPG";
+  private static final String URI =
+      "http://specify-attachments-saiab.saiab.ac.za/originals/att.JPG";
   private static final String SOURCE = "http://farm8.staticflickr.com/7093/7039524065_8.jpg";
   private static final String TITLE = "Geranium Plume Moth 0032";
   private static final String DESCRIPTION = "Geranium Plume Moth 0032 description";
-  private static final String LICENSE = "http://creativecommons.org/publicdomain/zero/1.0/legalcode";
+  private static final String LICENSE =
+      "http://creativecommons.org/publicdomain/zero/1.0/legalcode";
   private static final String CREATOR = "Moayed Bahajjaj";
   private static final String CREATED = "2012-03-29";
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   private static class CleanDateCreate extends DoFn<MultimediaRecord, MultimediaRecord> {
 
@@ -75,7 +74,8 @@ public class MultimediaRecordTransformTest {
 
     // When
     PCollection<MultimediaRecord> dataStream =
-        p.apply(Create.of(extendedRecord)).apply(MultimediaTransform.create().interpret())
+        p.apply(Create.of(extendedRecord))
+            .apply(MultimediaTransform.create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

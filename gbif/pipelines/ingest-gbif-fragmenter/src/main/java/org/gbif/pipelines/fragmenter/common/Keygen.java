@@ -1,19 +1,16 @@
 package org.gbif.pipelines.fragmenter.common;
 
+import com.google.common.base.Strings;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,10 +18,11 @@ public class Keygen {
 
   private static final Long ERROR_KEY = -1L;
 
-  /**
-   * Get or generate GBIF ID key
-   */
-  public static Long getKey(HBaseLockingKeyService keygenService, boolean useTriplet, boolean useOccurrenceId,
+  /** Get or generate GBIF ID key */
+  public static Long getKey(
+      HBaseLockingKeyService keygenService,
+      boolean useTriplet,
+      boolean useOccurrenceId,
       OccurrenceRecord record) {
 
     Set<String> uniqueStrings = new HashSet<>(2);

@@ -7,7 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
@@ -18,12 +19,7 @@ import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecord;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 import org.gbif.utils.file.ClosableIterator;
 
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-
-/**
- * Processing strategy for DWCA archives
- */
+/** Processing strategy for DWCA archives */
 @NoArgsConstructor(staticName = "create")
 public class DwcaStrategy implements Strategy {
 
@@ -57,5 +53,4 @@ public class DwcaStrategy implements Strategy {
           .collect(Collectors.toList());
     }
   }
-
 }

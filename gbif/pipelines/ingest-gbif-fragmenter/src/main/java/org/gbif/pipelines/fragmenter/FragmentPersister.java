@@ -15,7 +15,13 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Table;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
@@ -28,80 +34,56 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Table;
-
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * FragmentsUploader reads dwca/xml based archive and uploads raw json/xml records into HBase table.
- * <p>
- * Processing workflow:
- * 1. Read a dwca/xml archive
- * 2. Collect raw records into small batches (batch size is configurable)
- * 3. Get or create GBIF id for each element of the batch and create keys (salt + ":" + GBIF id)
- * 4. Get **dateCreated** from the table using GBIF id, if a record is exist
- * 5. Create HBase put(create new or update existing) records and upload them into HBase
+ *
+ * <p>Processing workflow: 1. Read a dwca/xml archive 2. Collect raw records into small batches
+ * (batch size is configurable) 3. Get or create GBIF id for each element of the batch and create
+ * keys (salt + ":" + GBIF id) 4. Get **dateCreated** from the table using GBIF id, if a record is
+ * exist 5. Create HBase put(create new or update existing) records and upload them into HBase
  *
  * <pre>{@code
- *    long recordsProcessed = FragmentsUploader.dwcaBuilder()
- *         .tableName("Tabe name")
- *         .keygenConfig(config)
- *         .pathToArchive(path)
- *         .useTriplet(true)
- *         .useOccurrenceId(true)
- *         .datasetKey(datasetKey)
- *         .attempt(attempt)
- *         .endpointType(EndpointType.DWC_ARCHIVE)
- *         .hbaseConnection(connection)
- *         .build()
- *         .upload();
+ * long recordsProcessed = FragmentsUploader.dwcaBuilder()
+ *      .tableName("Tabe name")
+ *      .keygenConfig(config)
+ *      .pathToArchive(path)
+ *      .useTriplet(true)
+ *      .useOccurrenceId(true)
+ *      .datasetKey(datasetKey)
+ *      .attempt(attempt)
+ *      .endpointType(EndpointType.DWC_ARCHIVE)
+ *      .hbaseConnection(connection)
+ *      .build()
+ *      .upload();
  * }</pre>
  */
-
 @Slf4j
 @Builder
 public class FragmentPersister {
 
-  @NonNull
-  private Strategy strategy;
+  @NonNull private Strategy strategy;
 
-  @NonNull
-  private String tableName;
+  @NonNull private String tableName;
 
-  @NonNull
-  private KeygenConfig keygenConfig;
+  @NonNull private KeygenConfig keygenConfig;
 
-  @NonNull
-  private Path pathToArchive;
+  @NonNull private Path pathToArchive;
 
-  @NonNull
-  private String datasetKey;
+  @NonNull private String datasetKey;
 
-  @NonNull
-  private Integer attempt;
+  @NonNull private Integer attempt;
 
-  @NonNull
-  private EndpointType endpointType;
+  @NonNull private EndpointType endpointType;
 
-  @NonNull
-  private Boolean useTriplet;
+  @NonNull private Boolean useTriplet;
 
-  @NonNull
-  private Boolean useOccurrenceId;
+  @NonNull private Boolean useOccurrenceId;
 
-  @Builder.Default
-  private int batchSize = 100;
+  @Builder.Default private int batchSize = 100;
 
-  @Builder.Default
-  private boolean useSyncMode = true;
+  @Builder.Default private boolean useSyncMode = true;
 
-  @Builder.Default
-  private ExecutorService executor = Executors.newSingleThreadExecutor();
+  @Builder.Default private ExecutorService executor = Executors.newSingleThreadExecutor();
 
   private Integer backPressure;
 
@@ -122,10 +104,15 @@ public class FragmentPersister {
     final Phaser phaser = new Phaser(1);
     final AtomicInteger occurrenceCounter = new AtomicInteger(0);
     final Queue<List<OccurrenceRecord>> rows = new LinkedBlockingQueue<>();
-    final Consumer<OccurrenceRecord> addRowFn = r -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(r));
-    final Connection connection = Optional.ofNullable(hbaseConnection)
-        .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getZkConnectionString()).getConnection());
-    final HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetKey);
+    final Consumer<OccurrenceRecord> addRowFn =
+        r -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(r));
+    final Connection connection =
+        Optional.ofNullable(hbaseConnection)
+            .orElse(
+                HbaseConnectionFactory.getInstance(keygenConfig.getZkConnectionString())
+                    .getConnection());
+    final HBaseLockingKeyService keygenService =
+        new HBaseLockingKeyService(keygenConfig, connection, datasetKey);
 
     rows.add(new ArrayList<>(batchSize));
 
@@ -134,41 +121,46 @@ public class FragmentPersister {
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
       // Main function receives batch and puts it into HBase table
-      Consumer<List<OccurrenceRecord>> hbaseBulkFn = l -> {
-        Map<String, String> map =
-            OccurrenceRecordConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
-        HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
+      Consumer<List<OccurrenceRecord>> hbaseBulkFn =
+          l -> {
+            Map<String, String> map =
+                OccurrenceRecordConverter.convert(
+                    keygenService, validator, useTriplet, useOccurrenceId, l);
+            HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
 
-        int recordsReturned = occurrenceCounter.addAndGet(map.size());
-        if (recordsReturned % 10_000 == 0) {
-          log.info("{}_{}: Pushed [{}] records", datasetKey, attempt, recordsReturned);
-        }
-        phaser.arriveAndDeregister();
-      };
+            int recordsReturned = occurrenceCounter.addAndGet(map.size());
+            if (recordsReturned % 10_000 == 0) {
+              log.info("{}_{}: Pushed [{}] records", datasetKey, attempt, recordsReturned);
+            }
+            phaser.arriveAndDeregister();
+          };
 
       // Function gets a batch and pushed using sync or async way
-      Runnable pushIntoHbaseFn = () ->
-          Optional.ofNullable(rows.poll())
-              .filter(req -> !req.isEmpty())
-              .ifPresent(req -> {
-                phaser.register();
-                if (useSyncMode) {
-                  hbaseBulkFn.accept(req);
-                } else {
-                  CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor);
-                }
-              });
+      Runnable pushIntoHbaseFn =
+          () ->
+              Optional.ofNullable(rows.poll())
+                  .filter(req -> !req.isEmpty())
+                  .ifPresent(
+                      req -> {
+                        phaser.register();
+                        if (useSyncMode) {
+                          hbaseBulkFn.accept(req);
+                        } else {
+                          CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor);
+                        }
+                      });
 
       // Function accumulates and pushes batches
-      Consumer<OccurrenceRecord> batchAndPushFn = record -> {
-        checkBackpressure(phaser);
-        addRowFn.accept(record);
-        List<OccurrenceRecord> peek = rows.peek();
-        if (peek == null || peek.size() > batchSize - 1) {
-          pushIntoHbaseFn.run();
-          rows.add(new ArrayList<>(batchSize));
-        }
-      };
+      Consumer<OccurrenceRecord> batchAndPushFn =
+          record -> {
+            checkBackpressure(phaser);
+            addRowFn.accept(record);
+            List<OccurrenceRecord> peek = rows.peek();
+            if (peek == null || peek.size() > batchSize - 1) {
+              pushIntoHbaseFn.run();
+              rows.add(new ArrayList<>(batchSize));
+            }
+          };
 
       strategy.process(pathToArchive, batchAndPushFn);
 
@@ -180,12 +172,9 @@ public class FragmentPersister {
     }
 
     return occurrenceCounter.get();
-
   }
 
-  /**
-   * Close HBase connection
-   */
+  /** Close HBase connection */
   public void close() {
     try {
       hbaseConnection.close();
@@ -195,7 +184,8 @@ public class FragmentPersister {
   }
 
   /**
-   * If the mode is async, check back pressure, the number of running async tasks must be less than backPressure setting
+   * If the mode is async, check back pressure, the number of running async tasks must be less than
+   * backPressure setting
    */
   private void checkBackpressure(Phaser phaser) {
     if (!useSyncMode && backPressure != null && backPressure > 0) {

@@ -1,12 +1,11 @@
 package org.gbif.pipelines.keygen.hbase;
 
+import static org.junit.Assert.assertEquals;
+
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class ColumnsTest {
 
@@ -39,5 +38,4 @@ public class ColumnsTest {
   public void testGetVerbatimColumn() {
     assertEquals("v_basisOfRecord", Columns.verbatimColumn(DwcTerm.basisOfRecord));
   }
-
 }

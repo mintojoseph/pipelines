@@ -1,19 +1,16 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Set;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
-
 import org.slf4j.MDC;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Pipeline sequence:

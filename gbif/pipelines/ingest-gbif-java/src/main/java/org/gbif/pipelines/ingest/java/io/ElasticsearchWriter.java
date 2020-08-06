@@ -12,7 +12,9 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
+import lombok.Builder;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -22,10 +24,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
-
-import lombok.Builder;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Builder
@@ -52,34 +50,40 @@ public class ElasticsearchWriter<T> {
       final Queue<BulkRequest> requests = new LinkedBlockingQueue<>();
       requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
 
-      Consumer<T> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
-          .ifPresent(req -> req.add(indexRequestFn.apply(br)));
+      Consumer<T> addIndexRequestFn =
+          br ->
+              Optional.ofNullable(requests.peek())
+                  .ifPresent(req -> req.add(indexRequestFn.apply(br)));
 
-      Consumer<BulkRequest> clientBulkFn = br -> {
-        try {
-          log.info("Push ES request, number of actions - {}", br.numberOfActions());
-          BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
-          phaser.arrive();
-          if (bulk.hasFailures()) {
-            log.error(bulk.buildFailureMessage());
-            throw new ElasticsearchException(bulk.buildFailureMessage());
-          }
-        } catch (IOException ex) {
-          log.error(ex.getMessage(), ex);
-          throw new ElasticsearchException(ex.getMessage(), ex);
-        }
-      };
-
-      Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
-          .filter(req -> req.numberOfActions() > 0)
-          .ifPresent(req -> {
-            phaser.register();
-            if (useSyncMode) {
-              clientBulkFn.accept(req);
-            } else {
-              CompletableFuture.runAsync(() -> clientBulkFn.accept(req), executor);
+      Consumer<BulkRequest> clientBulkFn =
+          br -> {
+            try {
+              log.info("Push ES request, number of actions - {}", br.numberOfActions());
+              BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
+              phaser.arrive();
+              if (bulk.hasFailures()) {
+                log.error(bulk.buildFailureMessage());
+                throw new ElasticsearchException(bulk.buildFailureMessage());
+              }
+            } catch (IOException ex) {
+              log.error(ex.getMessage(), ex);
+              throw new ElasticsearchException(ex.getMessage(), ex);
             }
-          });
+          };
+
+      Runnable pushIntoEsFn =
+          () ->
+              Optional.ofNullable(requests.poll())
+                  .filter(req -> req.numberOfActions() > 0)
+                  .ifPresent(
+                      req -> {
+                        phaser.register();
+                        if (useSyncMode) {
+                          clientBulkFn.accept(req);
+                        } else {
+                          CompletableFuture.runAsync(() -> clientBulkFn.accept(req), executor);
+                        }
+                      });
 
       // Push requests into ES
       for (T t : records) {
@@ -100,11 +104,11 @@ public class ElasticsearchWriter<T> {
       // Wait for all futures
       phaser.arriveAndAwaitAdvance();
     }
-
   }
 
   /**
-   * If the mode is async, check back pressure, the number of running async tasks must be less than backPressure setting
+   * If the mode is async, check back pressure, the number of running async tasks must be less than
+   * backPressure setting
    */
   private void checkBackpressure(Phaser phaser) {
     if (!useSyncMode && backPressure != null && backPressure > 0) {
@@ -119,5 +123,4 @@ public class ElasticsearchWriter<T> {
       }
     }
   }
-
 }

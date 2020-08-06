@@ -1,16 +1,14 @@
 package org.gbif.pipelines.keygen.common;
 
+import com.google.common.base.Strings;
 import java.io.IOException;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -28,5 +26,4 @@ public class HbaseConnection {
   public static Connection create() throws IOException {
     return create(null);
   }
-
 }

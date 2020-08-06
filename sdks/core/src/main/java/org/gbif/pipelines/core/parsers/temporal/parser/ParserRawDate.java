@@ -1,20 +1,17 @@
 package org.gbif.pipelines.core.parsers.temporal.parser;
 
-import java.time.temporal.ChronoField;
-import java.util.function.Predicate;
-
-import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.YEAR;
-
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
+
+import java.time.temporal.ChronoField;
+import java.util.function.Predicate;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
 
 /** Interpreter for raw date only. The main method parse, fills year, month and day in ParseDate */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

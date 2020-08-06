@@ -1,15 +1,13 @@
 package org.gbif.pipelines.core.parsers.temporal.utils;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
+
 import java.text.DateFormatSymbols;
 import java.util.Optional;
 import java.util.function.IntPredicate;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import static org.apache.commons.lang3.StringUtils.isNumeric;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 /** Util class for parsing values */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

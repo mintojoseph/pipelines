@@ -1,30 +1,22 @@
 package org.gbif.pipelines.crawler.interpret;
 
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
-
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
-/**
- * Configuration required to start Interpretation Pipeline on provided dataset
- */
+/** Configuration required to start Interpretation Pipeline on provided dataset */
 @ToString
 public class InterpreterConfiguration implements BaseConfiguration {
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
-  public StepConfiguration stepConfig = new StepConfiguration();
+  @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 
-  @ParametersDelegate
-  @Valid
-  @NotNull
+  @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
   @Parameter(names = "--meta-file-name")
@@ -124,5 +116,4 @@ public class InterpreterConfiguration implements BaseConfiguration {
   public String getMetaFileName() {
     return metaFileName;
   }
-
 }

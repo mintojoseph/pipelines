@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.AcTerm;
 import org.gbif.dwc.terms.DcTerm;

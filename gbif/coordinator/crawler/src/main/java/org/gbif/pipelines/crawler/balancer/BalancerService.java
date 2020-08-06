@@ -1,14 +1,14 @@
 package org.gbif.pipelines.crawler.balancer;
 
+import com.google.common.util.concurrent.AbstractIdleService;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 
-import com.google.common.util.concurrent.AbstractIdleService;
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesBalancerMessage }
+ * A service which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesBalancerMessage }
  */
 @Slf4j
 public class BalancerService extends AbstractIdleService {

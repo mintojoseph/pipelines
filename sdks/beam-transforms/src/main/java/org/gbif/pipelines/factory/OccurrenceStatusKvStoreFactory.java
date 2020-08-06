@@ -1,14 +1,13 @@
 package org.gbif.pipelines.factory;
 
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.common.parsers.OccurrenceStatusParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
-
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 
 /** Factory to get singleton instance of occurrence status {@link KeyValueStore} */
 public class OccurrenceStatusKvStoreFactory {
@@ -46,7 +45,8 @@ public class OccurrenceStatusKvStoreFactory {
 
   // This versions will be replaced by vocabulary server in the future
   @NoArgsConstructor(staticName = "create")
-  public static class OccurrenceStatusParserKvStore implements KeyValueStore<String, OccurrenceStatus> {
+  public static class OccurrenceStatusParserKvStore
+      implements KeyValueStore<String, OccurrenceStatus> {
 
     private final OccurrenceStatusParser parser = OccurrenceStatusParser.getInstance();
 

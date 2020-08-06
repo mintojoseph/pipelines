@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.options;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
@@ -37,7 +36,8 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setTargetPath(String targetPath);
 
-  @Description("Target metadata file name where the outputs of the pipeline metrics results will be written to.")
+  @Description(
+      "Target metadata file name where the outputs of the pipeline metrics results will be written to.")
   String getMetaFileName();
 
   void setMetaFileName(String metaFileName);
@@ -70,7 +70,8 @@ public interface BasePipelineOptions extends PipelineOptions {
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
     static Optional<String> getDefaultFs(PipelineOptions options) {
-      List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
+      List<Configuration> configs =
+          options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
 
       return Optional.ofNullable(configs)
           .filter(x -> !x.isEmpty())

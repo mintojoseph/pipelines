@@ -1,10 +1,9 @@
 package org.gbif.pipelines.factory;
 
+import lombok.SneakyThrows;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.transforms.SerializableSupplier;
-
-import lombok.SneakyThrows;
 
 public class MetadataServiceClientFactory {
 
@@ -35,7 +34,8 @@ public class MetadataServiceClientFactory {
   }
 
   /* TODO Comment */
-  public static SerializableSupplier<MetadataServiceClient> getInstanceSupplier(PipelinesConfig config) {
+  public static SerializableSupplier<MetadataServiceClient> getInstanceSupplier(
+      PipelinesConfig config) {
     return () -> getInstance(config);
   }
 }

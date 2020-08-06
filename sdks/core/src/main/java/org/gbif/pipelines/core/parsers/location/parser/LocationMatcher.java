@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,7 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.KeyValueStore;
@@ -16,12 +20,6 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
 /** Matches the location fields related to Country and Coordinates to find possible mismatches. */
 @Slf4j
@@ -91,7 +89,8 @@ public class LocationMatcher {
       if (countriesFound.filter(x -> x.contains(country)).isPresent()) {
         // country found
         // Add issues from the transformation
-        return success(country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
+        return success(
+            country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
       }
     }
 
@@ -127,20 +126,26 @@ public class LocationMatcher {
     return Optional.empty();
   }
 
-  private static Optional<Country> containsAnyCountry(Set<Country> possibilities, List<Country> countries) {
-    if (possibilities == null || possibilities.isEmpty() || countries == null || countries.isEmpty()) {
+  private static Optional<Country> containsAnyCountry(
+      Set<Country> possibilities, List<Country> countries) {
+    if (possibilities == null
+        || possibilities.isEmpty()
+        || countries == null
+        || countries.isEmpty()) {
       return Optional.empty();
     }
 
     return countries.stream().filter(possibilities::contains).findFirst();
   }
 
-  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, Set<String> issues) {
+  private static ParsedField<ParsedLocation> success(
+      Country country, LatLng latLng, Set<String> issues) {
     ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl, issues);
   }
 
-  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, OccurrenceIssue issue) {
+  private static ParsedField<ParsedLocation> success(
+      Country country, LatLng latLng, OccurrenceIssue issue) {
     return success(country, latLng, Collections.singleton(issue.name()));
   }
 

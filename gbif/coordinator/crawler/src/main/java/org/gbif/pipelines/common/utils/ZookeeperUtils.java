@@ -1,30 +1,24 @@
 package org.gbif.pipelines.common.utils;
 
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
+import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
+import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
-
-import org.gbif.crawler.constants.CrawlerNodePaths;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.locks.InterProcessMutex;
-import org.apache.zookeeper.CreateMode;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.apache.zookeeper.CreateMode;
+import org.gbif.crawler.constants.CrawlerNodePaths;
 
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
-import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
-import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-
-/**
- * Utils help to work with Zookeeper
- */
+/** Utils help to work with Zookeeper */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ZookeeperUtils {
@@ -60,9 +54,12 @@ public class ZookeeperUtils {
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
           curator.delete().deletingChildrenIfNeeded().forPath(path);
 
-          String crawlerDatasetZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), null);
+          String crawlerDatasetZkPath =
+              CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), null);
           if (checkExists(curator, crawlerDatasetZkPath)) {
-            String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
+            String crawlerZkPath =
+                CrawlerNodePaths.getCrawlInfoPath(
+                    UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
             log.info("Set crawler {} status to FINISHED", crawlerZkPath);
             ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "FINISHED");
           }
@@ -77,10 +74,9 @@ public class ZookeeperUtils {
     }
   }
 
-  /**
-   * Read value from Zookeeper as a {@link String}
-   */
-  public static Optional<Integer> getAsInteger(CuratorFramework curator, String crawlId, String path) throws Exception {
+  /** Read value from Zookeeper as a {@link String} */
+  public static Optional<Integer> getAsInteger(
+      CuratorFramework curator, String crawlId, String path) throws Exception {
     String infoPath = getPipelinesInfoPath(crawlId, path);
     if (checkExists(curator, infoPath)) {
       byte[] responseData = curator.getData().forPath(infoPath);
@@ -98,7 +94,8 @@ public class ZookeeperUtils {
    * @param path child node path
    * @param value some String value
    */
-  public static void updateMonitoring(CuratorFramework curator, String crawlId, String path, String value) {
+  public static void updateMonitoring(
+      CuratorFramework curator, String crawlId, String path, String value) {
     String fullPath = getPipelinesInfoPath(crawlId, path);
     updateMonitoring(curator, fullPath, value, CreateMode.EPHEMERAL);
   }
@@ -109,7 +106,8 @@ public class ZookeeperUtils {
    * @param path child node path
    * @param value some String value
    */
-  public static void updateMonitoring(CuratorFramework curator, String path, String value, CreateMode mode) {
+  public static void updateMonitoring(
+      CuratorFramework curator, String path, String value, CreateMode mode) {
     try {
       byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
       if (checkExists(curator, path)) {

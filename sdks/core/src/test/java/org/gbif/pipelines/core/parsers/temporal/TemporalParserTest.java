@@ -1,5 +1,12 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_MISMATCH;
+import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -8,17 +15,9 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_MISMATCH;
-import static org.gbif.pipelines.core.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4.class)
 public class TemporalParserTest {
@@ -561,7 +560,6 @@ public class TemporalParserTest {
     assertEquals(endDayOfYear, result.getEndDayOfYear().get());
     assertTrue(result.getIssues().isEmpty());
   }
-
 
   @Test
   public void fullLocalDateTimePeriodSkipZone2Test() {
@@ -1320,7 +1318,8 @@ public class TemporalParserTest {
     Integer startDayOfYear = 259;
     Integer endDayOfYear = 259;
 
-    String eventDate = "2016-09-15T00:05:00+1400 (LINT, Kiritimati, Kiribati - Christmas Island, UTC+14)";
+    String eventDate =
+        "2016-09-15T00:05:00+1400 (LINT, Kiritimati, Kiribati - Christmas Island, UTC+14)";
     String year = null;
     String month = null;
     String day = null;
@@ -1446,7 +1445,8 @@ public class TemporalParserTest {
   @Test
   public void textEventDateOnlyTest() {
     // State
-    String eventDate = "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
+    String eventDate =
+        "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
     String year = null;
     String month = null;
     String day = null;
@@ -1548,7 +1548,8 @@ public class TemporalParserTest {
     Integer startDayOfYear = 1;
     Integer endDayOfYear = 1;
 
-    String eventDate = "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
+    String eventDate =
+        "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
     String year = "1999";
     String month = "1";
     String day = "1";

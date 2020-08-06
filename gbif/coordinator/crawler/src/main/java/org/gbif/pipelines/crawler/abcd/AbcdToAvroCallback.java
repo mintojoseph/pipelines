@@ -10,7 +10,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.HiddenFileFilter;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.HttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -24,17 +29,7 @@ import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.utils.file.CompressionUtil;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.HiddenFileFilter;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.client.HttpClient;
-
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Call back which is called when the {@link PipelinesXmlMessage} is received.
- */
+/** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
 public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMessage>
     implements StepHandler<PipelinesAbcdMessage, PipelinesVerbatimMessage> {
@@ -76,9 +71,10 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   @Override
   public Runnable createRunnable(PipelinesAbcdMessage message) {
 
-    String subdir = config.archiveRepositorySubdir.stream()
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("archiveRepositorySubdir is empty"));
+    String subdir =
+        config.archiveRepositorySubdir.stream()
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("archiveRepositorySubdir is empty"));
 
     uncompress(
         Paths.get(config.archiveRepository, subdir, message.getDatasetUuid().toString() + ".abcda"),
@@ -95,13 +91,14 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     if (message.getPipelineSteps().isEmpty()) {
-      message.setPipelineSteps(new HashSet<>(Arrays.asList(
-          StepType.ABCD_TO_VERBATIM.name(),
-          StepType.VERBATIM_TO_INTERPRETED.name(),
-          StepType.INTERPRETED_TO_INDEX.name(),
-          StepType.HDFS_VIEW.name(),
-          StepType.FRAGMENTER.name()
-      )));
+      message.setPipelineSteps(
+          new HashSet<>(
+              Arrays.asList(
+                  StepType.ABCD_TO_VERBATIM.name(),
+                  StepType.VERBATIM_TO_INTERPRETED.name(),
+                  StepType.INTERPRETED_TO_INDEX.name(),
+                  StepType.HDFS_VIEW.name(),
+                  StepType.FRAGMENTER.name())));
     }
 
     return new PipelinesVerbatimMessage(
@@ -109,8 +106,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         message.getAttempt(),
         config.interpretTypes,
         message.getPipelineSteps(),
-        message.getEndpointType()
-    );
+        message.getEndpointType());
   }
 
   @Override

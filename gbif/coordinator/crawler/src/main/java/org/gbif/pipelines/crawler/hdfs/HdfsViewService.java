@@ -1,21 +1,19 @@
 package org.gbif.pipelines.crawler.hdfs;
 
+import com.google.common.util.concurrent.AbstractIdleService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-
-import com.google.common.util.concurrent.AbstractIdleService;
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage }
+ * A service which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage }
  */
 @Slf4j
 public class HdfsViewService extends AbstractIdleService {
@@ -38,10 +36,15 @@ public class HdfsViewService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
-    PipelinesHistoryWsClient historyWsClient = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    executor =
+        config.standaloneNumberThreads == null
+            ? null
+            : Executors.newFixedThreadPool(config.standaloneNumberThreads);
+    PipelinesHistoryWsClient historyWsClient =
+        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    HdfsViewCallback callback = new HdfsViewCallback(config, publisher, curator, historyWsClient, executor);
+    HdfsViewCallback callback =
+        new HdfsViewCallback(config, publisher, curator, historyWsClient, executor);
     listener.listen(c.queueName, c.poolSize, callback);
   }
 

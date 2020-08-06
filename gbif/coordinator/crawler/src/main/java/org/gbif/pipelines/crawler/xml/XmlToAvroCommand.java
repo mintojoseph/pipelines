@@ -1,15 +1,11 @@
 package org.gbif.pipelines.crawler.xml;
 
+import com.google.common.util.concurrent.Service;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
-
 import org.kohsuke.MetaInfServices;
 
-import com.google.common.util.concurrent.Service;
-
-/**
- * CLI {@link Command} to convert XML files (ABCD archives) to Avro.
- */
+/** CLI {@link Command} to convert XML files (ABCD archives) to Avro. */
 @MetaInfServices(Command.class)
 public class XmlToAvroCommand extends ServiceCommand {
 

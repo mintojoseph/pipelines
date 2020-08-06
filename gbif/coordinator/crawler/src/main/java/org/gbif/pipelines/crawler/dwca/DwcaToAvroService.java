@@ -1,18 +1,17 @@
 package org.gbif.pipelines.crawler.dwca;
 
+import com.google.common.util.concurrent.AbstractIdleService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-
-import com.google.common.util.concurrent.AbstractIdleService;
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * A service which listens to the  {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage } and perform conversion
+ * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage
+ * } and perform conversion
  */
 @Slf4j
 public class DwcaToAvroService extends AbstractIdleService {
@@ -34,9 +33,11 @@ public class DwcaToAvroService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient client =
+        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    listener.listen(c.queueName, c.poolSize, new DwcaToAvroCallback(this.config, publisher, curator, client));
+    listener.listen(
+        c.queueName, c.poolSize, new DwcaToAvroCallback(this.config, publisher, curator, client));
   }
 
   @Override

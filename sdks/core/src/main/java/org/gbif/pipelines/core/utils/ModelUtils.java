@@ -4,14 +4,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 /** Helps to work with org.gbif.pipelines.io.avro models */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,10 +19,15 @@ public class ModelUtils {
     return er.getCoreTerms().get(term.qualifiedName());
   }
 
-  /** Extracts a Term value, if such value has a variation of the word "null" it is transformed to null. */
+  /**
+   * Extracts a Term value, if such value has a variation of the word "null" it is transformed to
+   * null.
+   */
   public static String extractNullAwareValue(ExtendedRecord er, Term term) {
     String value = extractValue(er, term);
-    return value != null && ("null".equalsIgnoreCase(value.trim()) || value.isEmpty()) ? null : value;
+    return value != null && ("null".equalsIgnoreCase(value.trim()) || value.isEmpty())
+        ? null
+        : value;
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
@@ -69,5 +72,4 @@ public class ModelUtils {
   public static void addIssueSet(Issues model, Set<OccurrenceIssue> issues) {
     issues.forEach(x -> addIssue(model, x));
   }
-
 }

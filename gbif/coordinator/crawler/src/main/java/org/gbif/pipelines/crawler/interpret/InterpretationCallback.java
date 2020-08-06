@@ -1,9 +1,12 @@
 package org.gbif.pipelines.crawler.interpret;
 
+import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -22,18 +25,10 @@ import org.gbif.pipelines.crawler.interpret.ProcessRunnerBuilder.ProcessRunnerBu
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-
-import com.google.common.base.Strings;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Callback which is called when the {@link PipelinesVerbatimMessage} is received.
- */
+/** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
-public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage> implements
-    StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
+public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
+    implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
@@ -41,8 +36,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
 
-  public InterpretationCallback(InterpreterConfiguration config, MessagePublisher publisher,
-      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
+  public InterpretationCallback(
+      InterpreterConfiguration config,
+      MessagePublisher publisher,
+      CuratorFramework curator,
+      PipelinesHistoryWsClient client,
+      ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
@@ -65,8 +64,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   /**
-   * Only correct messages can be handled, by now is only messages with the same runner as runner in service config
-   * {@link InterpreterConfiguration#processRunner}
+   * Only correct messages can be handled, by now is only messages with the same runner as runner in
+   * service config {@link InterpreterConfiguration#processRunner}
    */
   @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
@@ -77,7 +76,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   /**
-   * Main message processing logic, creates a terminal java process, which runs verbatim-to-interpreted pipeline
+   * Main message processing logic, creates a terminal java process, which runs
+   * verbatim-to-interpreted pipeline
    */
   @Override
   public Runnable createRunnable(PipelinesVerbatimMessage message) {
@@ -86,13 +86,13 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       String attempt = Integer.toString(message.getAttempt());
 
       String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-      String path = message.getExtraPath() != null ? message.getExtraPath() :
-          String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
+      String path =
+          message.getExtraPath() != null
+              ? message.getExtraPath()
+              : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
-      ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
-          .config(config)
-          .message(message)
-          .inputPath(path);
+      ProcessRunnerBuilderBuilder builder =
+          ProcessRunnerBuilder.builder().config(config).message(message).inputPath(path);
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -114,7 +114,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
-        throw new IllegalStateException("Failed interpretation on " + message.getDatasetUuid().toString(), ex);
+        throw new IllegalStateException(
+            "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
   }
@@ -122,7 +123,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   @Override
   public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
     Long recordsNumber = null;
-    if (message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null) {
+    if (message.getValidationResult() != null
+        && message.getValidationResult().getNumberOfRecords() != null) {
       recordsNumber = message.getValidationResult().getNumberOfRecords();
     }
 
@@ -135,8 +137,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         repeatAttempt,
         message.getResetPrefix(),
         message.getEndpointType(),
-        message.getValidationResult()
-    );
+        message.getValidationResult());
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
@@ -148,7 +149,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     long recordsNumber = getRecordNumber(message);
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
 
-    builder.sparkParallelism(computeSparkParallelism(sparkExecutorNumbers))
+    builder
+        .sparkParallelism(computeSparkParallelism(sparkExecutorNumbers))
         .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers))
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
@@ -163,8 +165,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   /**
-   * Compute the number of thread for spark.default.parallelism, top limit is config.sparkParallelismMax
-   * Remember YARN will create the same number of files
+   * Compute the number of thread for spark.default.parallelism, top limit is
+   * config.sparkParallelismMax Remember YARN will create the same number of files
    */
   private int computeSparkParallelism(int executorNumbers) {
     int count = executorNumbers * config.sparkExecutorCores * 2;
@@ -179,8 +181,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   /**
-   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and
-   * max is config.sparkExecutorMemoryGbMax
+   * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
+   * config.sparkExecutorMemoryGbMax
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
 
@@ -194,12 +196,15 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   /**
-   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and
-   * max is config.sparkExecutorNumbersMax
+   * Computes the numbers of executors, where min is config.sparkExecutorNumbersMin and max is
+   * config.sparkExecutorNumbersMax
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
     int sparkExecutorNumbers =
-        (int) Math.ceil((double) recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
+        (int)
+            Math.ceil(
+                (double) recordsNumber
+                    / (config.sparkExecutorCores * config.sparkRecordsPerThread));
     if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
       return config.sparkExecutorNumbersMin;
     }
@@ -209,19 +214,20 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     return sparkExecutorNumbers;
   }
 
-  /**
-   * Reads number of records from the message or archive-to-avro metadata file
-   */
+  /** Reads number of records from the message or archive-to-avro metadata file */
   private long getRecordNumber(PipelinesVerbatimMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
-    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
     Long messageNumber =
-        message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
-            ? message.getValidationResult().getNumberOfRecords() : null;
+        message.getValidationResult() != null
+                && message.getValidationResult().getNumberOfRecords() != null
+            ? message.getValidationResult().getNumberOfRecords()
+            : null;
     String fileNumber =
         HdfsUtils.getValueByKey(
             config.stepConfig.hdfsSiteConfig,
@@ -245,15 +251,20 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     return messageNumber > Long.parseLong(fileNumber) ? messageNumber : Long.parseLong(fileNumber);
   }
 
-  /**
-   * Checks if the directory exists
-   */
+  /** Checks if the directory exists */
   @SneakyThrows
   private boolean pathExists(PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, Interpretation.DIRECTORY_NAME);
+    String path =
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            datasetId,
+            attempt,
+            Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
+    return HdfsUtils.exists(
+        config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
   }
 }

@@ -1,6 +1,8 @@
 package org.gbif.pipelines.crawler.xml;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
@@ -12,13 +14,10 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 /**
  * Service for the {@link XmlToAvroCommand}.
- * <p>
- * This service listens to {@link org.gbif.common.messaging.api.messages.PipelinesXmlMessage}.
+ *
+ * <p>This service listens to {@link org.gbif.common.messaging.api.messages.PipelinesXmlMessage}.
  */
 @Slf4j
 public class XmlToAvroService extends AbstractIdleService {
@@ -39,12 +38,14 @@ public class XmlToAvroService extends AbstractIdleService {
     // create the listener.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
-    // creates a binding between the queue specified in the configuration and the exchange and routing key specified in
+    // creates a binding between the queue specified in the configuration and the exchange and
+    // routing key specified in
     // CrawlFinishedMessage
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient client =
+        c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     HttpClient httpClient =
         HttpClients.custom()
@@ -65,5 +66,4 @@ public class XmlToAvroService extends AbstractIdleService {
     executor.shutdown();
     log.info("Stopping pipelines-to-avro-from-xml service");
   }
-
 }

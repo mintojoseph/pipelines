@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.parsers.temporal.utils;
 
 import java.util.regex.Pattern;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -49,10 +48,11 @@ public class DelimiterUtils {
     // check length, the length must be greater than seven to avoid case as "1999/2", where it looks
     // as year and month
     boolean canSplit =
-        rawPeriod.lastIndexOf(CHAR_PERIOD) == rawPeriod.indexOf(CHAR_PERIOD) && rawPeriod.length() > 7;
-    String[] splitted = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[]{rawPeriod, ""};
+        rawPeriod.lastIndexOf(CHAR_PERIOD) == rawPeriod.indexOf(CHAR_PERIOD)
+            && rawPeriod.length() > 7;
+    String[] splitted = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[] {rawPeriod, ""};
     // Returns an array of the same length each time
-    return splitted.length < 2 ? new String[]{splitted[0], ""} : splitted;
+    return splitted.length < 2 ? new String[] {splitted[0], ""} : splitted;
   }
 
   /**
@@ -61,7 +61,7 @@ public class DelimiterUtils {
    *
    * @param rawDateTime raw string date and time
    * @return an array with two elements, where fist is the date and second the time, example:
-   * {"10-10-2010", "10:10:10"}
+   *     {"10-10-2010", "10:10:10"}
    */
   public static String[] splitDateTime(String rawDateTime) {
     // Does value have time inside
@@ -87,7 +87,7 @@ public class DelimiterUtils {
     int timeIdx = shift + 1;
     String time = hasTime ? rawDateTime.substring(timeIdx) : "";
 
-    return new String[]{date, time};
+    return new String[] {date, time};
   }
 
   /**
@@ -112,7 +112,8 @@ public class DelimiterUtils {
   }
 
   /**
-   * Split raw time into an array with raw elements, example: "10:10:10+02:00" to {"10:10:10", "+02:00"}
+   * Split raw time into an array with raw elements, example: "10:10:10+02:00" to {"10:10:10",
+   * "+02:00"}
    *
    * @param rawTime raw string time
    * @return an array with two elements, where fist is the time and zone

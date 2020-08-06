@@ -1,18 +1,11 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.gbif.api.vocabulary.BasisOfRecord;
-import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -20,20 +13,24 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.api.vocabulary.BasisOfRecord;
+import org.gbif.api.vocabulary.License;
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
-
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
 public class BasicRecordTransformTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   private static class CleanDateCreate extends DoFn<BasicRecord, BasicRecord> {
 
@@ -50,10 +47,10 @@ public class BasicRecordTransformTest {
 
     // State
     final String[] one = {
-        "0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "http://refs.com"
+      "0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "http://refs.com"
     };
     final String[] two = {
-        "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "http://refs.com"
+      "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "http://refs.com"
     };
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
@@ -62,7 +59,8 @@ public class BasicRecordTransformTest {
 
     // When
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(records)).apply(BasicTransform.builder().create().interpret())
+        p.apply(Create.of(records))
+            .apply(BasicTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -77,7 +75,8 @@ public class BasicRecordTransformTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(er)).apply(BasicTransform.builder().create().interpret())
+        p.apply(Create.of(er))
+            .apply(BasicTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -88,22 +87,28 @@ public class BasicRecordTransformTest {
   @Test
   public void basisOfRecordTest() {
     // Expected
-    BasicRecord expected = BasicRecord.newBuilder()
-        .setId("777")
-        .setBasisOfRecord(BasisOfRecord.UNKNOWN.name())
-        .setCreated(0L)
-        .setLicense(License.UNSPECIFIED.name())
-        .setIssues(IssueRecord.newBuilder().setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name())).build())
-        .build();
+    BasicRecord expected =
+        BasicRecord.newBuilder()
+            .setId("777")
+            .setBasisOfRecord(BasisOfRecord.UNKNOWN.name())
+            .setCreated(0L)
+            .setLicense(License.UNSPECIFIED.name())
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))
+                    .build())
+            .build();
 
     // State
-    ExtendedRecord er = ExtendedRecord.newBuilder()
-        .setId("777")
-        .setCoreTerms(Collections.singletonMap(DwcTerm.sex.qualifiedName(), ""))
-        .build();
+    ExtendedRecord er =
+        ExtendedRecord.newBuilder()
+            .setId("777")
+            .setCoreTerms(Collections.singletonMap(DwcTerm.sex.qualifiedName(), ""))
+            .build();
 
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(er)).apply(BasicTransform.builder().create().interpret())
+        p.apply(Create.of(er))
+            .apply(BasicTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

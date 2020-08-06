@@ -11,5 +11,4 @@ public interface OccurrenceRecord {
   String getCatalogNumber();
 
   String getOccurrenceId();
-
 }

@@ -4,15 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 
 /**
  * Builder for a {@link ExtendedRecord}.
@@ -36,7 +34,8 @@ public class ExtendedRecordCustomBuilder {
     return this;
   }
 
-  public ExtendedRecordCustomBuilder addExtensionRecord(Extension extension, Map<String, String> record) {
+  public ExtendedRecordCustomBuilder addExtensionRecord(
+      Extension extension, Map<String, String> record) {
     if (extension != null) {
       if (extensions == null) {
         extensions = new HashMap<>();

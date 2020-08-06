@@ -1,5 +1,10 @@
 package org.gbif.pipelines.crawler.interpret;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
@@ -7,12 +12,6 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.junit.Test;
-
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
 
 public class ProcessRunnerBuilderTest {
 
@@ -67,8 +66,17 @@ public class ProcessRunnerBuilderTest {
     Set<String> types = Collections.singleton(RecordType.ALL.name());
     Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_INTERPRETED.name());
     PipelinesVerbatimMessage message =
-        new PipelinesVerbatimMessage(datasetId, attempt, types, steps, null, EndpointType.DWC_ARCHIVE, "something",
-            new ValidationResult(true, true, true, null), null, EXECUTION_ID);
+        new PipelinesVerbatimMessage(
+            datasetId,
+            attempt,
+            types,
+            steps,
+            null,
+            EndpointType.DWC_ARCHIVE,
+            "something",
+            new ValidationResult(true, true, true, null),
+            null,
+            EXECUTION_ID);
 
     // Expected
     ProcessBuilder builder =
@@ -130,7 +138,17 @@ public class ProcessRunnerBuilderTest {
     Set<String> types = Collections.singleton(RecordType.ALL.name());
     Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_INTERPRETED.name());
     PipelinesVerbatimMessage message =
-        new PipelinesVerbatimMessage(datasetId, attempt, types, steps, null, EndpointType.DWC_ARCHIVE, null, null, null, EXECUTION_ID);
+        new PipelinesVerbatimMessage(
+            datasetId,
+            attempt,
+            types,
+            steps,
+            null,
+            EndpointType.DWC_ARCHIVE,
+            null,
+            null,
+            null,
+            EXECUTION_ID);
 
     // Expected
     ProcessBuilder builder =
@@ -149,5 +167,4 @@ public class ProcessRunnerBuilderTest {
     // Should
     assertEquals(expected, result);
   }
-
 }
