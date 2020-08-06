@@ -14,7 +14,7 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>ala</module>
+    <module>livingatlas</module>
     <module>examples</module>
     <module>gbif</module>
     <module>tools</module>
